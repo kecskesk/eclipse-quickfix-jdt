@@ -3,6 +3,7 @@ package org.eclipsecon2012.jdt.quickfix1.processor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
+import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
@@ -12,17 +13,19 @@ import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.IfStatement;
 import org.eclipse.jdt.core.dom.InfixExpression;
-import org.eclipse.jdt.core.dom.InfixExpression.Operator;
 import org.eclipse.jdt.core.dom.NullLiteral;
 import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.Statement;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
 import org.eclipse.jdt.ui.text.java.correction.ASTRewriteCorrectionProposal;
+import org.eclipse.swt.graphics.Image;
 
+@SuppressWarnings("restriction")
 public class QuickFixNullCheck implements IQuickFixProcessor {
 
 	@Override
@@ -54,9 +57,12 @@ public class QuickFixNullCheck implements IQuickFixProcessor {
 			return;
 		}
 		switch (id) {
-			// 1. Which proposal(s) do we want. Call a method to handle each proposal.
+			// which proposal(s) do we want. Call a method to handle each proposal.
 			case IProblem.PotentialNullLocalVariableReference:
-				addNullCheckProposal(context, problem, proposals);
+				QuickFixNullCheck.addNullCheckProposal(context, problem, proposals);
+				break;
+			case IProblem.DereferencingNullableExpression:
+				QuickFixNullCheck.addNullCheckProposal(context, problem, proposals);
 				break;
 		}
 	}
@@ -66,43 +72,60 @@ public class QuickFixNullCheck implements IQuickFixProcessor {
 		ICompilationUnit cu= context.getCompilationUnit();
 		ASTNode selectedNode= problem.getCoveredNode(context.getASTRoot());
 		AST ast = selectedNode.getAST();
-		
-		ASTRewrite rewrite = ASTRewrite.create(ast);
-		String label= "Add null check to potential null local variable reference";
-		
-		SimpleName nameAst;
-		if (!(selectedNode instanceof SimpleName)) {
+		if (ast == null) {
 			return;
-		} else {
-			nameAst = (SimpleName)selectedNode;
 		}
 		
-		// Create if statement that has a check and a then
+		ASTRewrite rewrite = ASTRewrite.create(ast);
+		String label= "Add null check to fix potential null reference";
+		
+		// add sanity checks and AST modifications
+		if (!(selectedNode instanceof SimpleName)) {
+			return;
+		}
+		
+		// create IfStatement
 		IfStatement ifStatement = ast.newIfStatement();
+				
+		// create condition
+		InfixExpression exp = ast.newInfixExpression();
 		
-		// Create check that has selected equals null
-		InfixExpression ifExpression = ast.newInfixExpression();
-		
-		// Create then that has the node we put check on
+		// create a block and add the dereference statement into that block
 		Block block = ast.newBlock();
 		
-		ifStatement.setExpression(ifExpression);
+		ifStatement.setExpression(exp);
 		
 		ifStatement.setThenStatement(block);
 		
-		ifExpression.setOperator(Operator.NOT_EQUALS);
-		
-		SimpleName simpleNameLeftOperand = ast.newSimpleName(nameAst.getIdentifier());
-		ifExpression.setLeftOperand(simpleNameLeftOperand);
+		// set the proper operands and operator of the if's condition expression
+		SimpleName name = (SimpleName) selectedNode;
+		exp.setOperator(InfixExpression.Operator.NOT_EQUALS);
+		SimpleName operandName = ast.newSimpleName(name.getIdentifier());
+		exp.setLeftOperand(operandName);
 		NullLiteral nullLiteral = ast.newNullLiteral();
-		ifExpression.setRightOperand(nullLiteral);
+		exp.setRightOperand(nullLiteral);
 		
-		Statement blockStatement = (Statement) rewrite.createMoveTarget(nameAst.getParent().getParent());
-		block.statements().add(blockStatement);
-
-		rewrite.replace(nameAst.getParent().getParent(), ifStatement, null);
+		// add the earlier dereferencing statement into the if's then block
+		Statement blockSt;
+		ASTNode parentNode = name.getParent().getParent();
 		
-		ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 6);
+		for (int i = 0; i < 5 && !(parentNode instanceof Statement); i++) {
+			parentNode = parentNode.getParent();
+		}
+		
+		if (!(parentNode instanceof Statement)) {
+			return;
+		}
+		
+		blockSt = (Statement)rewrite.createMoveTarget(parentNode);
+		List<Statement> blockStatements = block.statements();
+		blockStatements.add(blockSt);
+		
+		// replace the dereferencing statement with the if statement using the 'rewrite' object.
+		rewrite.replace(parentNode, ifStatement, null);
+		Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_ADD);
+		
+		ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 6, image);
 			
 		proposals.add(proposal);
 	}
