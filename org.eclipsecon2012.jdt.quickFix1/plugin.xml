@@ -4,7 +4,9 @@
     <extension point="org.eclipse.jdt.ui.quickFixProcessors">
         <quickFixProcessor class="org.eclipsecon2012.jdt.quickfix1.processor.QuickFixNullCheck" id="org.eclipsecon2012.jdt.quickFix1.quickFixProcessor1">
             <handledMarkerTypes>
-                <markerType id="org.eclipse.jdt.core.problem" />
+                <markerType
+                      id="org.eclipsecon2012.jdt.quickFix1.mymarker">
+                </markerType>
             </handledMarkerTypes>
         </quickFixProcessor>
     </extension>

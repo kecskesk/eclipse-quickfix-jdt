@@ -30,6 +30,9 @@ public class QuickFixNullCheck implements IQuickFixProcessor {
 
 	@Override
 	public boolean hasCorrections(ICompilationUnit unit, int problemId) {
+		System.out.println(unit.getElementName());
+		System.out.println(problemId);
+		
 		return IProblem.PotentialNullLocalVariableReference == problemId;
 	}
 

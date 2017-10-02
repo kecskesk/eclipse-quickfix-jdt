@@ -14,15 +14,20 @@ import org.eclipse.core.resources.ResourcesPlugin;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaProject;
 import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
+import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTParser;
+import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
@@ -36,6 +41,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 public class MarkerGenerator extends AbstractHandler {
 
 	private static final String MY_MARKER_TYPE = "org.eclipsecon2012.jdt.quickFix1.mymarker";
+	private static final int MY_JDT_PROBLEM_ID = 1234;
 	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -85,14 +91,15 @@ public class MarkerGenerator extends AbstractHandler {
 			for (ICompilationUnit compilationUnit : mypackage.getCompilationUnits()) {
 				for (IType type : compilationUnit.getAllTypes()) {
 					for (IMethod method : type.getMethods()) {
-						IMarker marker = method.getUnderlyingResource().createMarker(MY_MARKER_TYPE);
+						IMarker marker = method.getResource().createMarker(MY_MARKER_TYPE);
 						CompilationUnit cu = parse(method.getCompilationUnit());
 						Map<String, Object> attributes = new HashMap<String,Object>();					
 						attributes.put(IMarker.LOCATION, method.getElementName());
-						attributes.put(IMarker.MESSAGE, "Test marker");
+						attributes.put(IMarker.MESSAGE, "Test marker -> class: " + type.getElementName() + " method: " + method.getElementName() + " .");
 						attributes.put(IMarker.SEVERITY, new Integer(IMarker.SEVERITY_ERROR));
-						attributes.put(IMarker.LINE_NUMBER, cu.getLineNumber(cu.getStartPosition()) - 1);
+						attributes.put(IJavaModelMarker.ID, MY_JDT_PROBLEM_ID);
 						
+						setPositionFinder(method.getElementName(), type, attributes, cu);
 						marker.setAttributes(attributes);
 					}
 				}
@@ -105,6 +112,36 @@ public class MarkerGenerator extends AbstractHandler {
         parser.setKind(ASTParser.K_COMPILATION_UNIT);
         parser.setSource(unit);
         parser.setResolveBindings(true);
-        return (CompilationUnit) parser.createAST(null); // parse
+        return (CompilationUnit) parser.createAST(null);
     }
+	
+	private void setPositionFinder(String name, IType type, Map<String, Object> attributes, CompilationUnit cu) throws JavaModelException
+	{
+	    ICompilationUnit unit = type.getCompilationUnit();
+	    ASTParser parser = ASTParser.newParser(AST.JLS8);
+	    parser.setSource(unit);
+	    parser.setResolveBindings(true);
+	    CompilationUnit cunit = (CompilationUnit) parser.createAST(null);
+
+	    cunit.accept(new ASTVisitor() {
+
+			public boolean visit(MethodDeclaration methodDeclaration)
+	        {
+	            String methodName = methodDeclaration.getName().toString();
+	            //System.out.println(methodName);
+	            if (methodName.equals(name))
+	            {
+	                int startPosition = methodDeclaration.getStartPosition();
+	                int length = methodDeclaration.getLength();
+	   
+            		// Marks the line of the method 
+	                // Underlines the whole method character-precise
+	                attributes.put(IMarker.CHAR_START, startPosition);
+	                attributes.put(IMarker.CHAR_END, startPosition + length);
+	                attributes.put(IMarker.LINE_NUMBER, cu.getLineNumber(startPosition));
+	            }
+	            return false;
+	        }
+	    });
+	}
 }
