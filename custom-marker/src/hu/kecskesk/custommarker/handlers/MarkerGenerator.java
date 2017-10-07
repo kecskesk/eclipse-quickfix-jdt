@@ -3,6 +3,7 @@ package hu.kecskesk.custommarker.handlers;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -26,6 +27,7 @@ import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleName;
@@ -107,65 +109,81 @@ public class MarkerGenerator extends AbstractHandler {
 			for (ICompilationUnit compilationUnit : mypackage.getCompilationUnits()) {
 				CompilationUnit cu = parse(compilationUnit);
 				Map<MethodDeclaration, List<SingleVariableDeclaration>> variables = new HashMap<>();
-				
+
 				cu.accept(new ASTVisitor() {
 					public boolean visit(MethodDeclaration methodDeclaration) {
-						variables.put(methodDeclaration, methodDeclaration.parameters());						
+						variables.put(methodDeclaration, methodDeclaration.parameters());
 						return false;
 					}
 				});
-				
+
 				cu.accept(new ASTVisitor() {
 					public boolean visit(InfixExpression infixExpression) {
-						if (isNull(infixExpression.getLeftOperand())) {
-							// null == variable
-							if (isSimpleName(infixExpression.getRightOperand())) {
-								SimpleName variable = (SimpleName)infixExpression.getRightOperand();
-								foundNullCheck(variable, infixExpression, compilationUnit, cu);								
-							}
-
-						} else if (isNull(infixExpression.getRightOperand())) {
-							// variable == null
-							if (isSimpleName(infixExpression.getLeftOperand())) {
-								SimpleName variable = (SimpleName)infixExpression.getLeftOperand();
-								foundNullCheck(variable, infixExpression, compilationUnit, cu);
-							}
+						Optional<SimpleName> variable = getVariableIfNullCheck(infixExpression);
+						if (variable.isPresent()) {
+							SimpleName variableToDebug = variable.get();
+							variables.forEach((method, parameterList) -> {
+								parameterList.forEach((singleVariable) -> {
+									IBinding binding = singleVariable.getName().resolveBinding();
+									IBinding binding2 = variableToDebug.resolveBinding();
+									
+									if (binding.equals(binding2)) {
+										foundNullCheck(variableToDebug, infixExpression, compilationUnit, cu, method);
+									}
+								});
+							});
 						}
 						return true;
 					}
-				});				
+				});
 			}
 		}
 	}
-	
-	private void foundNullCheck(SimpleName variable, InfixExpression infixExpression, ICompilationUnit compilationUnit, CompilationUnit cu) {
+
+	private Optional<SimpleName> getVariableIfNullCheck(InfixExpression infixExpression) {
+		if (isNull(infixExpression.getLeftOperand())) {
+			// null == variable
+			if (isSimpleName(infixExpression.getRightOperand())) {
+				return Optional.of((SimpleName) infixExpression.getRightOperand());
+			}
+		} else if (isNull(infixExpression.getRightOperand())) {
+			// variable == null
+			if (isSimpleName(infixExpression.getLeftOperand())) {
+				return Optional.of((SimpleName) infixExpression.getLeftOperand());
+			}
+		}
+		return Optional.empty();
+	}
+
+	private void foundNullCheck(SimpleName variable, InfixExpression infixExpression, ICompilationUnit compilationUnit,
+			CompilationUnit cu, MethodDeclaration method) {
 		try {
 			IMarker nullMarker = compilationUnit.getResource().createMarker(MY_MARKER_TYPE);
 			markerCounter++;
-			
-			Map<String, Object> attributes = new HashMap<String,Object>();					
+
+			Map<String, Object> attributes = new HashMap<String, Object>();
 			attributes.put(IMarker.LOCATION, variable.getFullyQualifiedName());
-			attributes.put(IMarker.MESSAGE, "Test marker -> class: " + compilationUnit.getElementName() + " method: " + variable.getFullyQualifiedName() + " .");
+			attributes.put(IMarker.MESSAGE, "Test marker -> class: " + compilationUnit.getElementName() + " method: "
+					+ method.getName().toString() + " parameter: " + variable.getFullyQualifiedName() + " .");
 			attributes.put(IMarker.SEVERITY, new Integer(IMarker.SEVERITY_ERROR));
 			attributes.put(IJavaModelMarker.ID, MY_JDT_PROBLEM_ID);
-			
+
 			int startPosition = infixExpression.getStartPosition();
 			int length = infixExpression.getLength();
 			attributes.put(IMarker.CHAR_START, startPosition);
 			attributes.put(IMarker.CHAR_END, startPosition + length);
 			attributes.put(IMarker.LINE_NUMBER, cu.getLineNumber(startPosition));
-			
+
 			nullMarker.setAttributes(attributes);
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
 	}
-	
+
 	private boolean isNull(Expression exp) {
 		return ASTNode.NULL_LITERAL == exp.getNodeType();
 	}
-	
-	
+
 	private boolean isSimpleName(Expression exp) {
 		return ASTNode.SIMPLE_NAME == exp.getNodeType();
 	}
