@@ -1,6 +1,7 @@
 package hu.kecskesk.custommarker.handlers;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -16,17 +17,19 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaElement;
 import org.eclipse.jdt.core.IJavaModelMarker;
 import org.eclipse.jdt.core.IJavaProject;
-import org.eclipse.jdt.core.IMethod;
 import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
-import org.eclipse.jdt.core.IType;
 import org.eclipse.jdt.core.JavaCore;
-import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.Expression;
+import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
@@ -44,21 +47,21 @@ public class MarkerGenerator extends AbstractHandler {
 	private static final String MY_MARKER_TYPE = "hu.kecskesk.custommarker.mymarker";
 	private static final int MY_JDT_PROBLEM_ID = 1234;
 	private int markerCounter;
-	
+
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 
 		StringBuilder message = new StringBuilder();
 		markerCounter = 0;
-		
+
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
 		IProject[] projects = root.getProjects();
-		
+
 		for (IProject project : projects) {
 			try {
-				if (project.hasNature(JavaCore.NATURE_ID)) {
+				if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
 					IJavaProject javaProject = JavaCore.create(project);
 					findErrorsInProject(javaProject, message);
 				}
@@ -66,14 +69,15 @@ public class MarkerGenerator extends AbstractHandler {
 				e.printStackTrace();
 			}
 		}
-		
+
 		message.append("I have added " + markerCounter + " markers for you.");
 
 		MessageDialog.openInformation(window.getShell(), "QuickFix1", message.toString());
-		
+
 		try {
-			//  PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView("org.eclipse.ui.views.ProblemView");
-			PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView("org.eclipse.ui.views.AllMarkersView");
+			// PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView("org.eclipse.ui.views.ProblemView");
+			PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
+					.showView("org.eclipse.ui.views.AllMarkersView");
 		} catch (PartInitException e) {
 			e.printStackTrace();
 		}
@@ -86,75 +90,91 @@ public class MarkerGenerator extends AbstractHandler {
 			findErrorsInPackageFragmentRoot(mypackage, message);
 		}
 	}
-	
+
 	private void findErrorsInPackageFragmentRoot(IPackageFragmentRoot pkg, StringBuilder message) throws CoreException {
 		if (pkg.getKind() == IPackageFragmentRoot.K_SOURCE) {
 			IJavaElement[] children = pkg.getChildren();
-			for (IJavaElement pkgFrag: children) {
-				if(pkgFrag instanceof IPackageFragment) {
-					findErrorsInPackage((IPackageFragment)pkgFrag, message);
+			for (IJavaElement pkgFrag : children) {
+				if (pkgFrag instanceof IPackageFragment) {
+					findErrorsInPackage((IPackageFragment) pkgFrag, message);
 				}
 			}
 		}
 	}
-	
+
 	private void findErrorsInPackage(IPackageFragment mypackage, StringBuilder message) throws CoreException {
 		if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
 			for (ICompilationUnit compilationUnit : mypackage.getCompilationUnits()) {
-				for (IType type : compilationUnit.getAllTypes()) {
-					for (IMethod method : type.getMethods()) {
-						IMarker marker = method.getResource().createMarker(MY_MARKER_TYPE);
-						markerCounter++;
-						CompilationUnit cu = parse(method.getCompilationUnit());
-						Map<String, Object> attributes = new HashMap<String,Object>();					
-						attributes.put(IMarker.LOCATION, method.getElementName());
-						attributes.put(IMarker.MESSAGE, "Test marker -> class: " + type.getElementName() + " method: " + method.getElementName() + " .");
-						attributes.put(IMarker.SEVERITY, new Integer(IMarker.SEVERITY_ERROR));
-						attributes.put(IJavaModelMarker.ID, MY_JDT_PROBLEM_ID);
-						
-						setPositionFinder(method.getElementName(), type, attributes, cu);
-						marker.setAttributes(attributes);
+				CompilationUnit cu = parse(compilationUnit);
+				Map<MethodDeclaration, List<SingleVariableDeclaration>> variables = new HashMap<>();
+				
+				cu.accept(new ASTVisitor() {
+					public boolean visit(MethodDeclaration methodDeclaration) {
+						variables.put(methodDeclaration, methodDeclaration.parameters());						
+						return false;
 					}
-				}
+				});
+				
+				cu.accept(new ASTVisitor() {
+					public boolean visit(InfixExpression infixExpression) {
+						if (isNull(infixExpression.getLeftOperand())) {
+							// null == variable
+							if (isSimpleName(infixExpression.getRightOperand())) {
+								SimpleName variable = (SimpleName)infixExpression.getRightOperand();
+								foundNullCheck(variable, infixExpression, compilationUnit, cu);								
+							}
+
+						} else if (isNull(infixExpression.getRightOperand())) {
+							// variable == null
+							if (isSimpleName(infixExpression.getLeftOperand())) {
+								SimpleName variable = (SimpleName)infixExpression.getLeftOperand();
+								foundNullCheck(variable, infixExpression, compilationUnit, cu);
+							}
+						}
+						return true;
+					}
+				});				
 			}
 		}
 	}
 	
-	private static CompilationUnit parse(ICompilationUnit unit) {
-        ASTParser parser = ASTParser.newParser(AST.JLS8);
-        parser.setKind(ASTParser.K_COMPILATION_UNIT);
-        parser.setSource(unit);
-        parser.setResolveBindings(true);
-        return (CompilationUnit) parser.createAST(null);
-    }
+	private void foundNullCheck(SimpleName variable, InfixExpression infixExpression, ICompilationUnit compilationUnit, CompilationUnit cu) {
+		try {
+			IMarker nullMarker = compilationUnit.getResource().createMarker(MY_MARKER_TYPE);
+			markerCounter++;
+			
+			Map<String, Object> attributes = new HashMap<String,Object>();					
+			attributes.put(IMarker.LOCATION, variable.getFullyQualifiedName());
+			attributes.put(IMarker.MESSAGE, "Test marker -> class: " + compilationUnit.getElementName() + " method: " + variable.getFullyQualifiedName() + " .");
+			attributes.put(IMarker.SEVERITY, new Integer(IMarker.SEVERITY_ERROR));
+			attributes.put(IJavaModelMarker.ID, MY_JDT_PROBLEM_ID);
+			
+			int startPosition = infixExpression.getStartPosition();
+			int length = infixExpression.getLength();
+			attributes.put(IMarker.CHAR_START, startPosition);
+			attributes.put(IMarker.CHAR_END, startPosition + length);
+			attributes.put(IMarker.LINE_NUMBER, cu.getLineNumber(startPosition));
+			
+			nullMarker.setAttributes(attributes);
+		} catch (CoreException e) {
+			e.printStackTrace();
+		}
+	}
 	
-	private void setPositionFinder(String name, IType type, Map<String, Object> attributes, CompilationUnit cu) throws JavaModelException
-	{
-	    ICompilationUnit unit = type.getCompilationUnit();
-	    ASTParser parser = ASTParser.newParser(AST.JLS8);
-	    parser.setSource(unit);
-	    parser.setResolveBindings(true);
-	    CompilationUnit cunit = (CompilationUnit) parser.createAST(null);
+	private boolean isNull(Expression exp) {
+		return ASTNode.NULL_LITERAL == exp.getNodeType();
+	}
+	
+	
+	private boolean isSimpleName(Expression exp) {
+		return ASTNode.SIMPLE_NAME == exp.getNodeType();
+	}
 
-	    cunit.accept(new ASTVisitor() {
-
-			public boolean visit(MethodDeclaration methodDeclaration)
-	        {
-	            String methodName = methodDeclaration.getName().toString();
-	            //System.out.println(methodName);
-	            if (methodName.equals(name))
-	            {
-	                int startPosition = methodDeclaration.getStartPosition();
-	                int length = methodDeclaration.getLength();
-	   
-            		// Marks the line of the method 
-	                // Underlines the whole method character-precise
-	                attributes.put(IMarker.CHAR_START, startPosition);
-	                attributes.put(IMarker.CHAR_END, startPosition + length);
-	                attributes.put(IMarker.LINE_NUMBER, cu.getLineNumber(startPosition));
-	            }
-	            return false;
-	        }
-	    });
+	private static CompilationUnit parse(ICompilationUnit unit) {
+		ASTParser parser = ASTParser.newParser(AST.JLS8);
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+		parser.setSource(unit);
+		parser.setResolveBindings(true);
+		return (CompilationUnit) parser.createAST(null);
 	}
 }
