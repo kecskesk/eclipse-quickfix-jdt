@@ -29,6 +29,8 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 /**
@@ -41,13 +43,14 @@ public class MarkerGenerator extends AbstractHandler {
 
 	private static final String MY_MARKER_TYPE = "hu.kecskesk.custommarker.mymarker";
 	private static final int MY_JDT_PROBLEM_ID = 1234;
+	private int markerCounter;
 	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 
 		StringBuilder message = new StringBuilder();
-		message.append("I have added x markers for you.");
+		markerCounter = 0;
 		
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
 		IWorkspaceRoot root = workspace.getRoot();
@@ -63,8 +66,18 @@ public class MarkerGenerator extends AbstractHandler {
 				e.printStackTrace();
 			}
 		}
+		
+		message.append("I have added " + markerCounter + " markers for you.");
 
 		MessageDialog.openInformation(window.getShell(), "QuickFix1", message.toString());
+		
+		try {
+			//  PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView("org.eclipse.ui.views.ProblemView");
+			PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage().showView("org.eclipse.ui.views.AllMarkersView");
+		} catch (PartInitException e) {
+			e.printStackTrace();
+		}
+
 		return null;
 	}
 
@@ -91,6 +104,7 @@ public class MarkerGenerator extends AbstractHandler {
 				for (IType type : compilationUnit.getAllTypes()) {
 					for (IMethod method : type.getMethods()) {
 						IMarker marker = method.getResource().createMarker(MY_MARKER_TYPE);
+						markerCounter++;
 						CompilationUnit cu = parse(method.getCompilationUnit());
 						Map<String, Object> attributes = new HashMap<String,Object>();					
 						attributes.put(IMarker.LOCATION, method.getElementName());

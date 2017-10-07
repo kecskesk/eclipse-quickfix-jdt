@@ -20,12 +20,12 @@
           point="org.eclipse.ui.commands">
        <category
              id="hu.kecskesk.custommarker.commands.category"
-             name="Sample Category">
+             name="My marker category">
        </category>
        <command
              categoryId="hu.kecskesk.custommarker.commands.category"
              id="hu.kecskesk.custommarker.commands.sampleCommand"
-             name="Sample Command">
+             name="Add my markers">
        </command>
     </extension>
     <extension
