@@ -47,8 +47,8 @@ import org.eclipse.ui.handlers.HandlerUtil;
 public class MarkerGenerator extends AbstractHandler {
 
 	private static final String MY_MARKER_TYPE = "hu.kecskesk.custommarker.mymarker";
-	private static final int MY_JDT_PROBLEM_ID = 1234;
 	private int markerCounter;
+	public static final int MY_JDT_PROBLEM_ID = 1234;
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -108,11 +108,14 @@ public class MarkerGenerator extends AbstractHandler {
 		if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
 			for (ICompilationUnit compilationUnit : mypackage.getCompilationUnits()) {
 				CompilationUnit cu = parse(compilationUnit);
-				Map<MethodDeclaration, List<SingleVariableDeclaration>> variables = new HashMap<>();
+				Map<MethodDeclaration, Map<SingleVariableDeclaration, Boolean>> variables = new HashMap<>();
 
 				cu.accept(new ASTVisitor() {
+					@SuppressWarnings("unchecked")
 					public boolean visit(MethodDeclaration methodDeclaration) {
-						variables.put(methodDeclaration, methodDeclaration.parameters());
+						Map<SingleVariableDeclaration, Boolean> parameterAdded =  new HashMap<>();
+						methodDeclaration.parameters().forEach(parameter -> parameterAdded.put((SingleVariableDeclaration) parameter, false)); 
+						variables.put(methodDeclaration, parameterAdded);
 						return false;
 					}
 				});
@@ -121,14 +124,14 @@ public class MarkerGenerator extends AbstractHandler {
 					public boolean visit(InfixExpression infixExpression) {
 						Optional<SimpleName> variable = getVariableIfNullCheck(infixExpression);
 						if (variable.isPresent()) {
-							SimpleName variableToDebug = variable.get();
 							variables.forEach((method, parameterList) -> {
-								parameterList.forEach((singleVariable) -> {
+								parameterList.keySet().forEach((singleVariable) -> {
 									IBinding binding = singleVariable.getName().resolveBinding();
-									IBinding binding2 = variableToDebug.resolveBinding();
+									IBinding binding2 =  variable.get().resolveBinding();
 									
-									if (binding.equals(binding2)) {
-										foundNullCheck(variableToDebug, infixExpression, compilationUnit, cu, method);
+									if (binding.equals(binding2) && !parameterList.get(singleVariable)) {
+										foundNullCheck(singleVariable, compilationUnit, cu, method);
+										parameterList.put(singleVariable, true);
 									}
 								});
 							});
@@ -155,21 +158,20 @@ public class MarkerGenerator extends AbstractHandler {
 		return Optional.empty();
 	}
 
-	private void foundNullCheck(SimpleName variable, InfixExpression infixExpression, ICompilationUnit compilationUnit,
+	private void foundNullCheck(SingleVariableDeclaration variable, ICompilationUnit compilationUnit,
 			CompilationUnit cu, MethodDeclaration method) {
 		try {
 			IMarker nullMarker = compilationUnit.getResource().createMarker(MY_MARKER_TYPE);
 			markerCounter++;
 
 			Map<String, Object> attributes = new HashMap<String, Object>();
-			attributes.put(IMarker.LOCATION, variable.getFullyQualifiedName());
-			attributes.put(IMarker.MESSAGE, "Test marker -> class: " + compilationUnit.getElementName() + " method: "
-					+ method.getName().toString() + " parameter: " + variable.getFullyQualifiedName() + " .");
-			attributes.put(IMarker.SEVERITY, new Integer(IMarker.SEVERITY_ERROR));
+			attributes.put(IMarker.LOCATION, variable.toString());
+			attributes.put(IMarker.MESSAGE, "In this method you could replace your nullable parameter with the use of Optional");
+			attributes.put(IMarker.SEVERITY, new Integer(IMarker.SEVERITY_WARNING));
 			attributes.put(IJavaModelMarker.ID, MY_JDT_PROBLEM_ID);
 
-			int startPosition = infixExpression.getStartPosition();
-			int length = infixExpression.getLength();
+			int startPosition = variable.getStartPosition();
+			int length = variable.getLength();
 			attributes.put(IMarker.CHAR_START, startPosition);
 			attributes.put(IMarker.CHAR_END, startPosition + length);
 			attributes.put(IMarker.LINE_NUMBER, cu.getLineNumber(startPosition));

@@ -3,19 +3,15 @@ package hu.kecskesk.custommarker.processor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.compiler.IProblem;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.Block;
-import org.eclipse.jdt.core.dom.IfStatement;
-import org.eclipse.jdt.core.dom.InfixExpression;
-import org.eclipse.jdt.core.dom.NullLiteral;
+import org.eclipse.jdt.core.dom.ParameterizedType;
 import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.Statement;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
@@ -25,15 +21,14 @@ import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
 import org.eclipse.jdt.ui.text.java.correction.ASTRewriteCorrectionProposal;
 import org.eclipse.swt.graphics.Image;
 
+import hu.kecskesk.custommarker.handlers.MarkerGenerator;
+
 @SuppressWarnings("restriction")
 public class QuickFixNullCheck implements IQuickFixProcessor {
 
 	@Override
 	public boolean hasCorrections(ICompilationUnit unit, int problemId) {
-		// System.out.println(unit.getElementName());
-		// System.out.println(problemId);
-		
-		return IProblem.PotentialNullLocalVariableReference == problemId;
+		return MarkerGenerator.MY_JDT_PROBLEM_ID == problemId;
 	}
 
 	@Override
@@ -61,16 +56,12 @@ public class QuickFixNullCheck implements IQuickFixProcessor {
 		}
 		switch (id) {
 			// which proposal(s) do we want. Call a method to handle each proposal.
-			case IProblem.PotentialNullLocalVariableReference:
-				QuickFixNullCheck.addNullCheckProposal(context, problem, proposals);
-				break;
-			case IProblem.DereferencingNullableExpression:
+			case MarkerGenerator.MY_JDT_PROBLEM_ID:
 				QuickFixNullCheck.addNullCheckProposal(context, problem, proposals);
 				break;
 		}
 	}
 	
-	@SuppressWarnings("unchecked")
 	public static void addNullCheckProposal(IInvocationContext context, IProblemLocation problem, Collection<IJavaCompletionProposal> proposals){
 		ICompilationUnit cu= context.getCompilationUnit();
 		ASTNode selectedNode= problem.getCoveredNode(context.getASTRoot());
@@ -80,52 +71,30 @@ public class QuickFixNullCheck implements IQuickFixProcessor {
 		}
 		
 		ASTRewrite rewrite = ASTRewrite.create(ast);
-		String label= "Add null check to fix potential null reference";
+		String label= "Use Optional class instead of nullable parameter";
 		
-		// add sanity checks and AST modifications
-		if (!(selectedNode instanceof SimpleName)) {
+		// Make sure we grabbed a method parameter
+		if (!(selectedNode instanceof SingleVariableDeclaration)) {
+			return;
+		}
+		SingleVariableDeclaration oldParameter = (SingleVariableDeclaration)selectedNode;
+		if (!oldParameter.getType().isSimpleType()) {
 			return;
 		}
 		
-		// create IfStatement
-		IfStatement ifStatement = ast.newIfStatement();
+		ParameterizedType optionalType = ast.newParameterizedType(ast.newSimpleType(ast.newSimpleName("Optional")));
+		SimpleType oldType = (SimpleType) oldParameter.getType();
+		SimpleName oldTypeName = (SimpleName) oldType.getName();
+		SimpleType baseType = ast.newSimpleType(ast.newSimpleName(oldTypeName.getIdentifier()));
+		
+		optionalType.typeArguments().add(baseType);
+
+		SingleVariableDeclaration newParameter = ast.newSingleVariableDeclaration();
+		newParameter.setName(ast.newSimpleName(oldParameter.getName().getIdentifier()));
+		newParameter.setType(optionalType);
 				
-		// create condition
-		InfixExpression exp = ast.newInfixExpression();
-		
-		// create a block and add the dereference statement into that block
-		Block block = ast.newBlock();
-		
-		ifStatement.setExpression(exp);
-		
-		ifStatement.setThenStatement(block);
-		
-		// set the proper operands and operator of the if's condition expression
-		SimpleName name = (SimpleName) selectedNode;
-		exp.setOperator(InfixExpression.Operator.NOT_EQUALS);
-		SimpleName operandName = ast.newSimpleName(name.getIdentifier());
-		exp.setLeftOperand(operandName);
-		NullLiteral nullLiteral = ast.newNullLiteral();
-		exp.setRightOperand(nullLiteral);
-		
-		// add the earlier dereferencing statement into the if's then block
-		Statement blockSt;
-		ASTNode parentNode = name.getParent().getParent();
-		
-		for (int i = 0; i < 5 && !(parentNode instanceof Statement); i++) {
-			parentNode = parentNode.getParent();
-		}
-		
-		if (!(parentNode instanceof Statement)) {
-			return;
-		}
-		
-		blockSt = (Statement)rewrite.createMoveTarget(parentNode);
-		List<Statement> blockStatements = block.statements();
-		blockStatements.add(blockSt);
-		
 		// replace the dereferencing statement with the if statement using the 'rewrite' object.
-		rewrite.replace(parentNode, ifStatement, null);
+		rewrite.replace(oldParameter, newParameter, null);
 		Image image= JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_ADD);
 		
 		ASTRewriteCorrectionProposal proposal= new ASTRewriteCorrectionProposal(label, cu, rewrite, 6, image);
