@@ -1,7 +1,6 @@
 package hu.kecskesk.custommarker.handlers;
 
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 
@@ -22,11 +21,9 @@ import org.eclipse.jdt.core.IPackageFragment;
 import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaCore;
 import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.ASTVisitor;
 import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.IBinding;
 import org.eclipse.jdt.core.dom.InfixExpression;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -37,6 +34,8 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
+
+import hu.kecskesk.utils.Utils;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -122,7 +121,7 @@ public class MarkerGenerator extends AbstractHandler {
 
 				cu.accept(new ASTVisitor() {
 					public boolean visit(InfixExpression infixExpression) {
-						Optional<SimpleName> variable = getVariableIfNullCheck(infixExpression);
+						Optional<SimpleName> variable = Utils.getVariableIfNullCheck(infixExpression);
 						if (variable.isPresent()) {
 							variables.forEach((method, parameterList) -> {
 								parameterList.keySet().forEach((singleVariable) -> {
@@ -141,21 +140,6 @@ public class MarkerGenerator extends AbstractHandler {
 				});
 			}
 		}
-	}
-
-	private Optional<SimpleName> getVariableIfNullCheck(InfixExpression infixExpression) {
-		if (isNull(infixExpression.getLeftOperand())) {
-			// null == variable
-			if (isSimpleName(infixExpression.getRightOperand())) {
-				return Optional.of((SimpleName) infixExpression.getRightOperand());
-			}
-		} else if (isNull(infixExpression.getRightOperand())) {
-			// variable == null
-			if (isSimpleName(infixExpression.getLeftOperand())) {
-				return Optional.of((SimpleName) infixExpression.getLeftOperand());
-			}
-		}
-		return Optional.empty();
 	}
 
 	private void foundNullCheck(SingleVariableDeclaration variable, ICompilationUnit compilationUnit,
@@ -180,14 +164,6 @@ public class MarkerGenerator extends AbstractHandler {
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private boolean isNull(Expression exp) {
-		return ASTNode.NULL_LITERAL == exp.getNodeType();
-	}
-
-	private boolean isSimpleName(Expression exp) {
-		return ASTNode.SIMPLE_NAME == exp.getNodeType();
 	}
 
 	private static CompilationUnit parse(ICompilationUnit unit) {
