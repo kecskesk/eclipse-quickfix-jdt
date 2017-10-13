@@ -4,13 +4,25 @@
     <extension point="org.eclipse.jdt.ui.quickFixProcessors">
         <quickFixProcessor class="hu.kecskesk.custommarker.processor.QuickFixNullCheck" id="hu.kecskesk.custommarker.quickFixProcessor1">
             <handledMarkerTypes>
-                <markerType
-                      id="hu.kecskesk.custommarker.mymarker">
-                </markerType>
+                <markerType id="hu.kecskesk.custommarker.mymarker-list"></markerType>
+                <markerType id="hu.kecskesk.custommarker.mymarker-set"></markerType>
+                <markerType id="hu.kecskesk.custommarker.mymarker-map"></markerType>
             </handledMarkerTypes>
         </quickFixProcessor>
     </extension>
-    <extension id="mymarker" name="My Problem" point="org.eclipse.core.resources.markers">
+    <extension id="mymarker-list" name="Switch to immutable list method" point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.jdt.core.problem" />
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <super type="org.eclipse.core.resources.textmarker" />
+        <persistent value="true" />
+    </extension>
+    <extension id="mymarker-set" name="Switch to immutable set method" point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.jdt.core.problem" />
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <super type="org.eclipse.core.resources.textmarker" />
+        <persistent value="true" />
+    </extension>
+    <extension id="mymarker-map" name="Switch to immutable map method" point="org.eclipse.core.resources.markers">
         <super type="org.eclipse.jdt.core.problem" />
         <super type="org.eclipse.core.resources.problemmarker" />
         <super type="org.eclipse.core.resources.textmarker" />
@@ -55,7 +67,7 @@
              <command
                    commandId="hu.kecskesk.custommarker.commands.sampleCommand"
                    id="hu.kecskesk.custommarker.menus.sampleCommand"
-                   mnemonic="S">
+                   mnemonic="A">
              </command>
           </menu>
        </menuContribution>
