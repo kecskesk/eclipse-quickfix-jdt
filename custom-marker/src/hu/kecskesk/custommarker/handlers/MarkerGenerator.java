@@ -106,7 +106,7 @@ public class MarkerGenerator extends AbstractHandler {
 	private void findErrorsInPackage(IPackageFragment mypackage, StringBuilder message) throws CoreException {
 		if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
 			for (ICompilationUnit compilationUnit : mypackage.getCompilationUnits()) {
-				CompilationUnit cu = parse(compilationUnit);
+				CompilationUnit cu = Utils.parse(compilationUnit);
 				Map<MethodDeclaration, Map<SingleVariableDeclaration, Boolean>> variables = new HashMap<>();
 
 				cu.accept(new ASTVisitor() {
@@ -164,13 +164,5 @@ public class MarkerGenerator extends AbstractHandler {
 		} catch (CoreException e) {
 			e.printStackTrace();
 		}
-	}
-
-	private static CompilationUnit parse(ICompilationUnit unit) {
-		ASTParser parser = ASTParser.newParser(AST.JLS8);
-		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		parser.setSource(unit);
-		parser.setResolveBindings(true);
-		return (CompilationUnit) parser.createAST(null);
 	}
 }

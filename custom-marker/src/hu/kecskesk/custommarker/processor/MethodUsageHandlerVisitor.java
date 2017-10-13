@@ -1,5 +1,7 @@
 package hu.kecskesk.custommarker.processor;
 
+import java.util.List;
+
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.ASTVisitor;
@@ -13,19 +15,21 @@ public class MethodUsageHandlerVisitor extends ASTVisitor {
 	private final SingleVariableDeclaration oldParameter;
 	private final MethodDeclaration method;
 	private final ASTRewrite rewrite;
-
+	private final List<Integer> counter;
+	
 	public MethodUsageHandlerVisitor(SingleVariableDeclaration oldParameter, MethodDeclaration method,
-			ASTRewrite rewrite) {
+			ASTRewrite rewrite, List<Integer> counter) {
 		this.oldParameter = oldParameter;
 		this.method = method;
 		this.rewrite = rewrite;
+		this.counter = counter;
 	}
 
 	@Override
 	public boolean visit(MethodInvocation methodInvocationNode) {
 		IMethodBinding visited = methodInvocationNode.resolveMethodBinding();
 		IMethodBinding methodBinding = method.resolveBinding();
-		if (visited == methodBinding) {
+		if (visited.isEqualTo(methodBinding)) {
 			handleMethodCall(methodInvocationNode);
 		}
 
@@ -40,10 +44,11 @@ public class MethodUsageHandlerVisitor extends ASTVisitor {
 
 		MethodInvocation ofWrapper = ast.newMethodInvocation();
 		ofWrapper.setName(ast.newSimpleName("of"));
-		ofWrapper.setExpression(ast.newSimpleName("Optional"));
+		ofWrapper.setExpression(ast.newSimpleName("Optional"));	
 		ofWrapper.arguments().add(rewrite.createMoveTarget(originalArgument));
 
 		rewrite.replace(originalArgument, ofWrapper, null);
+		counter.add(1);
 	}
 
 	private int getArgumentPlace(SingleVariableDeclaration oldParameter, MethodDeclaration method) {

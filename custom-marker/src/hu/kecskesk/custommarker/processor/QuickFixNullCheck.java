@@ -7,6 +7,9 @@ import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
@@ -29,6 +32,7 @@ import org.eclipse.jdt.ui.text.java.correction.ASTRewriteCorrectionProposal;
 import org.eclipse.swt.graphics.Image;
 
 import hu.kecskesk.custommarker.handlers.MarkerGenerator;
+import hu.kecskesk.utils.Utils;
 
 @SuppressWarnings("restriction")
 public class QuickFixNullCheck implements IQuickFixProcessor {
@@ -90,19 +94,56 @@ public class QuickFixNullCheck implements IQuickFixProcessor {
 		method.accept(new ParameterUsageHandlerVisitor(oldParameter, rewrite));
 
 		// 3. Find usages on the method and correct its calls
-		//if (Modifier.isPrivate(method.getModifiers())) {
-			ASTNode typeNode = method.getParent();
-			if (!(typeNode instanceof TypeDeclaration)) {
-				return;
+		
+		// 3.1 Check inside the class
+		ASTNode typeNode = method.getParent();
+		if (!(typeNode instanceof TypeDeclaration)) {
+			return;
+		}
+		TypeDeclaration type = (TypeDeclaration) typeNode;
+		type.accept(new MethodUsageHandlerVisitor(oldParameter, method, rewrite, new ArrayList<>()));
+
+		// 3.2 Check outside this class
+		List<ASTRewrite> rewriteOtherClasses = new ArrayList<>();
+		IPackageFragmentRoot[] allPackageRoots = cu.getJavaProject().getPackageFragmentRoots();
+		for (IPackageFragmentRoot iPackageFragmentRoot : allPackageRoots) {
+			if (iPackageFragmentRoot.getKind() == IPackageFragmentRoot.K_SOURCE) {
+				for (IJavaElement child : iPackageFragmentRoot.getChildren()) {
+					if (child instanceof IPackageFragment) {
+						IPackageFragment iPackageFragment = (IPackageFragment)child;							
+						ICompilationUnit[] compUnits = iPackageFragment.getCompilationUnits();
+						for (ICompilationUnit iCompilationUnit: compUnits) {
+							CompilationUnit otherClass = Utils.parse(iCompilationUnit);
+							if (!iCompilationUnit.getElementName().equals(cu.getElementName())) {	
+								ASTRewrite rewriteOtherClass = ASTRewrite.create(otherClass.getAST());
+								List<Integer> counter = new ArrayList<>();
+								otherClass.accept(new MethodUsageHandlerVisitor(oldParameter, method, rewriteOtherClass, counter));
+								
+								if (!counter.isEmpty()) {
+									proposals.add(createProposalFromRewrite(iCompilationUnit, rewriteOtherClass, label));
+									rewriteOtherClasses.add(rewriteOtherClass);
+								}
+							}								
+						}
+					}
+				}
 			}
-			TypeDeclaration type = (TypeDeclaration) typeNode;
-			type.accept(new MethodUsageHandlerVisitor(oldParameter, method, rewrite));
-		//}
+			
+			
+			/*rewriteOtherClasses.forEach((rewriteClass) -> {
+				rewrite.
+			});*/
+		}
 
 		// 4. Send the proposal
+		proposals.add(createProposalFromRewrite(cu, rewrite, label));
+	}
+
+	private static ASTRewriteCorrectionProposal createProposalFromRewrite(ICompilationUnit cu, ASTRewrite rewrite,
+			String label) {
 		Image image = JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_ADD);
 		ASTRewriteCorrectionProposal proposal = new ASTRewriteCorrectionProposal(label, cu, rewrite, 6, image);
-		proposals.add(proposal);
+		return proposal;
 	}
 
 	@SuppressWarnings("unchecked")
