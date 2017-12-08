@@ -1,0 +1,75 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<plugin>
+    <extension point="org.eclipse.jdt.ui.quickFixProcessors">
+        <quickFixProcessor class="hu.kecskesk.custommarker.processor.QuickFixNullCheck" id="hu.kecskesk.custommarker.quickFixProcessor1">
+            <handledMarkerTypes>
+                <markerType
+                      id="hu.kecskesk.custommarker.mymarker">
+                </markerType>
+            </handledMarkerTypes>
+        </quickFixProcessor>
+    </extension>
+    <extension id="mymarker" name="My Problem" point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.jdt.core.problem" />
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <super type="org.eclipse.core.resources.textmarker" />
+        <persistent value="true" />
+    </extension>
+    <extension
+          point="org.eclipse.ui.commands">
+       <category
+             id="hu.kecskesk.custommarker.commands.category"
+             name="My marker category">
+       </category>
+       <command
+             categoryId="hu.kecskesk.custommarker.commands.category"
+             id="hu.kecskesk.custommarker.commands.sampleCommand"
+             name="Add my markers">
+       </command>
+    </extension>
+    <extension
+          point="org.eclipse.ui.handlers">
+       <handler
+             class="hu.kecskesk.custommarker.handlers.MarkerGenerator"
+             commandId="hu.kecskesk.custommarker.commands.sampleCommand">
+       </handler>
+    </extension>
+    <extension
+          point="org.eclipse.ui.bindings">
+       <key
+             commandId="hu.kecskesk.custommarker.commands.sampleCommand"
+             contextId="org.eclipse.ui.contexts.window"
+             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+             sequence="M1+6">
+       </key>
+    </extension>
+    <extension
+          point="org.eclipse.ui.menus">
+       <menuContribution
+             locationURI="menu:org.eclipse.ui.main.menu?after=additions">
+          <menu
+                id="hu.kecskesk.custommarker.menus.sampleMenu"
+                label="My Plugin Menu"
+                mnemonic="M">
+             <command
+                   commandId="hu.kecskesk.custommarker.commands.sampleCommand"
+                   id="hu.kecskesk.custommarker.menus.sampleCommand"
+                   mnemonic="S">
+             </command>
+          </menu>
+       </menuContribution>
+       <menuContribution
+             locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
+          <toolbar
+                id="hu.kecskesk.custommarker.toolbars.sampleToolbar">
+             <command
+                   commandId="hu.kecskesk.custommarker.commands.sampleCommand"
+                   icon="icons/sample.png"
+                   id="hu.kecskesk.custommarker.toolbars.sampleCommand"
+                   tooltip="Add my markers">
+             </command>
+          </toolbar>
+       </menuContribution>
+    </extension>
+</plugin>

@@ -7,11 +7,22 @@ import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
+import org.eclipse.jdt.core.IJavaElement;
+import org.eclipse.jdt.core.IPackageFragment;
+import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.CompilationUnit;
+import org.eclipse.jdt.core.dom.ImportDeclaration;
+import org.eclipse.jdt.core.dom.MethodDeclaration;
+import org.eclipse.jdt.core.dom.ParameterizedType;
+import org.eclipse.jdt.core.dom.SimpleName;
+import org.eclipse.jdt.core.dom.SimpleType;
+import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.TypeDeclaration;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
+import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
@@ -21,14 +32,14 @@ import org.eclipse.jdt.ui.text.java.correction.ASTRewriteCorrectionProposal;
 import org.eclipse.swt.graphics.Image;
 
 import hu.kecskesk.custommarker.handlers.MarkerGenerator;
+import hu.kecskesk.utils.Utils;
 
 @SuppressWarnings("restriction")
 public class QuickFixNullCheck implements IQuickFixProcessor {
 
 	@Override
 	public boolean hasCorrections(ICompilationUnit unit, int problemId) {
-		return List.of(MarkerGenerator.MY_JDT_PROBLEM_ID_LIST, MarkerGenerator.MY_JDT_PROBLEM_ID_MAP,
-				MarkerGenerator.MY_JDT_PROBLEM_ID_SET).contains(problemId);
+		return MarkerGenerator.MY_JDT_PROBLEM_ID == problemId;
 	}
 
 	@Override
@@ -38,7 +49,7 @@ public class QuickFixNullCheck implements IQuickFixProcessor {
 		ArrayList<IJavaCompletionProposal> resultingCollections = new ArrayList<IJavaCompletionProposal>();
 		for (int i = 0; i < locations.length; i++) {
 			IProblemLocation curr = locations[i];
-			Integer id = curr.getProblemId();
+			Integer id = new Integer(curr.getProblemId());
 			if (handledProblems.add(id)) {
 				addNullCheckProposal(context, curr, resultingCollections);
 			}
@@ -59,8 +70,7 @@ public class QuickFixNullCheck implements IQuickFixProcessor {
 		String label = "Use Optional class instead of nullable parameter";
 
 		// 0. Make sure we grabbed a method parameter
-		System.out.println(selectedNode.getClass().getName());
-		if (!(selectedNode instanceof MethodInvocation)) {
+		if (!(selectedNode instanceof SingleVariableDeclaration)) {
 			return;
 		}
 
