@@ -46,6 +46,7 @@ public class QuickFixImmutableCollections implements IQuickFixProcessor {
 		return resultingCollections.toArray(new IJavaCompletionProposal[resultingCollections.size()]);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void addNullCheckProposal(IInvocationContext context, IProblemLocation problem,
 			Collection<IJavaCompletionProposal> proposals) throws JavaModelException {
 		ICompilationUnit cu = context.getCompilationUnit();
@@ -56,13 +57,27 @@ public class QuickFixImmutableCollections implements IQuickFixProcessor {
 		}
 
 		ASTRewrite rewrite = ASTRewrite.create(ast);
-		String label = "Use Optional class instead of nullable parameter";
+		String label = "Use factory method for immutable collections";
 
 		// 0. Make sure we grabbed a method parameter
-		System.out.println(selectedNode.getClass().getName());
 		if (!(selectedNode instanceof MethodInvocation)) {
 			return;
 		}
+		
+		MethodInvocation oldMethodInvocation = (MethodInvocation) selectedNode;
+		if (!oldMethodInvocation.getName().getIdentifier().equals("asList")) {
+			return;
+		}
+		
+		MethodInvocation listFactory = ast.newMethodInvocation();
+		listFactory.setName(ast.newSimpleName("of"));
+		listFactory.setExpression(ast.newSimpleName("List"));
+		
+		oldMethodInvocation.arguments().forEach((argument) -> {
+			listFactory.arguments().add(rewrite.createCopyTarget((ASTNode)argument));
+		});
+		
+		rewrite.replace(selectedNode, listFactory, null);
 
 		// 4. Send the proposal
 		proposals.add(createProposalFromRewrite(cu, rewrite, label));
