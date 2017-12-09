@@ -23,7 +23,7 @@ import org.eclipse.swt.graphics.Image;
 import hu.kecskesk.custommarker.handlers.MarkerGenerator;
 
 @SuppressWarnings("restriction")
-public class QuickFixNullCheck implements IQuickFixProcessor {
+public class QuickFixImmutableCollections implements IQuickFixProcessor {
 
 	@Override
 	public boolean hasCorrections(ICompilationUnit unit, int problemId) {

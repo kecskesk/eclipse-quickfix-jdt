@@ -70,15 +70,15 @@ public class MarkerDetectorVisitor extends ASTVisitor {
 			switch (resultType) {
 			case SET:
 				newMarker = iCompilationUnit.getResource().createMarker(MarkerGenerator.MY_MARKER_TYPE_SET);
-				attributes.put(IJavaModelMarker.ID, MarkerGenerator.MY_MARKER_TYPE_SET);
+				attributes.put(IJavaModelMarker.ID, MarkerGenerator.MY_JDT_PROBLEM_ID_SET);
 				break;
 			case LIST:
 				newMarker = iCompilationUnit.getResource().createMarker(MarkerGenerator.MY_MARKER_TYPE_LIST);
-				attributes.put(IJavaModelMarker.ID, MarkerGenerator.MY_MARKER_TYPE_LIST);
+				attributes.put(IJavaModelMarker.ID, MarkerGenerator.MY_JDT_PROBLEM_ID_LIST);
 				break;
 			case MAP:
 				newMarker = iCompilationUnit.getResource().createMarker(MarkerGenerator.MY_MARKER_TYPE_MAP);
-				attributes.put(IJavaModelMarker.ID, MarkerGenerator.MY_MARKER_TYPE_MAP);
+				attributes.put(IJavaModelMarker.ID, MarkerGenerator.MY_JDT_PROBLEM_ID_MAP);
 				break;
 			default:
 				throw new UnsupportedOperationException("enums should not be other than the three predefined");
