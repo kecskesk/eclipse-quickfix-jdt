@@ -3,26 +3,17 @@ package hu.kecskesk.custommarker.processor;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashSet;
-import java.util.List;
 
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
-import org.eclipse.jdt.core.IJavaElement;
-import org.eclipse.jdt.core.IPackageFragment;
-import org.eclipse.jdt.core.IPackageFragmentRoot;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.CompilationUnit;
-import org.eclipse.jdt.core.dom.ImportDeclaration;
-import org.eclipse.jdt.core.dom.MethodDeclaration;
-import org.eclipse.jdt.core.dom.ParameterizedType;
-import org.eclipse.jdt.core.dom.SimpleName;
-import org.eclipse.jdt.core.dom.SimpleType;
-import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
-import org.eclipse.jdt.core.dom.TypeDeclaration;
+import org.eclipse.jdt.core.dom.Block;
+import org.eclipse.jdt.core.dom.TryStatement;
+import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
+import org.eclipse.jdt.core.dom.VariableDeclarationFragment;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
-import org.eclipse.jdt.core.dom.rewrite.ListRewrite;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
@@ -32,16 +23,16 @@ import org.eclipse.jdt.ui.text.java.correction.ASTRewriteCorrectionProposal;
 import org.eclipse.swt.graphics.Image;
 
 import hu.kecskesk.custommarker.handlers.MarkerGenerator;
-import hu.kecskesk.utils.Utils;
 
 @SuppressWarnings("restriction")
-public class QuickFixNullCheck implements IQuickFixProcessor {
+public class QuickFixTryResource implements IQuickFixProcessor {
 
 	@Override
 	public boolean hasCorrections(ICompilationUnit unit, int problemId) {
 		return MarkerGenerator.MY_JDT_PROBLEM_ID == problemId;
 	}
 
+	@SuppressWarnings("deprecation")
 	@Override
 	public IJavaCompletionProposal[] getCorrections(IInvocationContext context, IProblemLocation[] locations)
 			throws CoreException {
@@ -57,6 +48,7 @@ public class QuickFixNullCheck implements IQuickFixProcessor {
 		return resultingCollections.toArray(new IJavaCompletionProposal[resultingCollections.size()]);
 	}
 
+	@SuppressWarnings("unchecked")
 	public static void addNullCheckProposal(IInvocationContext context, IProblemLocation problem,
 			Collection<IJavaCompletionProposal> proposals) throws JavaModelException {
 		ICompilationUnit cu = context.getCompilationUnit();
@@ -67,12 +59,21 @@ public class QuickFixNullCheck implements IQuickFixProcessor {
 		}
 
 		ASTRewrite rewrite = ASTRewrite.create(ast);
-		String label = "Use Optional class instead of nullable parameter";
+		String label = "Use the new try resource technique";
 
 		// 0. Make sure we grabbed a method parameter
-		if (!(selectedNode instanceof SingleVariableDeclaration)) {
+		if (!(selectedNode instanceof VariableDeclarationExpression)) {
 			return;
 		}
+		
+		VariableDeclarationExpression expression = (VariableDeclarationExpression)selectedNode;
+		VariableDeclarationFragment fragment = (VariableDeclarationFragment) expression.fragments().get(0);
+		TryStatement tryStatement = (TryStatement) expression.getParent();
+		
+		TryStatement newTryStatement = ast.newTryStatement();
+		newTryStatement.setBody((Block) rewrite.createCopyTarget(tryStatement.getBody()));
+		newTryStatement.resources().add(rewrite.createCopyTarget(fragment.getName()));
+		newTryStatement.resources().add(expression);
 
 		// 4. Send the proposal
 		proposals.add(createProposalFromRewrite(cu, rewrite, label));

@@ -11,6 +11,7 @@ import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
 import org.eclipse.jdt.core.dom.MethodInvocation;
+import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
@@ -56,7 +57,7 @@ public class QuickFixNullCheck implements IQuickFixProcessor {
 		}
 
 		ASTRewrite rewrite = ASTRewrite.create(ast);
-		String label = "Use Optional class instead of nullable parameter";
+		String label = "Use factory method to create immutable collection";
 
 		// 0. Make sure we grabbed a method parameter
 		System.out.println(selectedNode.getClass().getName());
@@ -67,7 +68,7 @@ public class QuickFixNullCheck implements IQuickFixProcessor {
 		// 4. Send the proposal
 		proposals.add(createProposalFromRewrite(cu, rewrite, label));
 	}
-
+ 
 	private static ASTRewriteCorrectionProposal createProposalFromRewrite(ICompilationUnit cu, ASTRewrite rewrite,
 			String label) {
 		Image image = JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_ADD);

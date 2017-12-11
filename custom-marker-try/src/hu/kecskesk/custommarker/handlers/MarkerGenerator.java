@@ -24,6 +24,8 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
 import org.eclipse.jdt.core.dom.SimpleType;
 import org.eclipse.jdt.core.dom.SingleVariableDeclaration;
+import org.eclipse.jdt.core.dom.TryStatement;
+import org.eclipse.jdt.core.dom.VariableDeclarationExpression;
 import org.eclipse.jdt.core.dom.VariableDeclarationStatement;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -116,12 +118,13 @@ public class MarkerGenerator extends AbstractHandler {
 				});
 
 				cu.accept(new ASTVisitor() {
-					public boolean visit(VariableDeclarationStatement vds) {
-						if (vds.getType() instanceof SimpleType) {
-							SimpleType vdsType = (SimpleType)vds.getType();
-							if (vdsType.getName().resolveBinding().getKey().equals("Ljava/sql/Connection;")) {
-								foundConnection(vds, compilationUnit, cu);
+					public boolean visit(TryStatement tryStatement) {
+						if (tryStatement.resources().size() == 1) {
+							if (tryStatement.resources().get(0) instanceof VariableDeclarationExpression) {
+								foundConnection((VariableDeclarationExpression) tryStatement.resources().get(0), compilationUnit, cu);
 							}
+						} else {
+							System.out.println(tryStatement.resources());
 						}
 						return true;
 					}
@@ -130,7 +133,7 @@ public class MarkerGenerator extends AbstractHandler {
 		}
 	}
 
-	private void foundConnection(VariableDeclarationStatement variableDecl, ICompilationUnit compilationUnit,
+	private void foundConnection(VariableDeclarationExpression variableDecl, ICompilationUnit compilationUnit,
 			CompilationUnit cu) {
 		try {
 			IMarker nullMarker = compilationUnit.getResource().createMarker(MY_MARKER_TYPE);

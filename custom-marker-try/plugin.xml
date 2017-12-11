@@ -2,7 +2,7 @@
 <?eclipse version="3.4"?>
 <plugin>
     <extension point="org.eclipse.jdt.ui.quickFixProcessors">
-        <quickFixProcessor class="hu.kecskesk.custommarker.processor.QuickFixNullCheck" id="hu.kecskesk.custommarker.quickFixProcessor1">
+        <quickFixProcessor class="hu.kecskesk.custommarker.processor.QuickFixTryResource" id="hu.kecskesk.custommarker.quickFixProcessor1">
             <handledMarkerTypes>
                 <markerType
                       id="hu.kecskesk.custommarker.mymarker">
