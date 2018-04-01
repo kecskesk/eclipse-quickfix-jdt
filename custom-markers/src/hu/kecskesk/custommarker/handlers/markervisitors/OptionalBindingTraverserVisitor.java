@@ -30,7 +30,7 @@ public class OptionalBindingTraverserVisitor extends MarkerVisitor {
 					
 					if (binding.equals(binding2) && !parameterList.get(singleVariable)) {
 						try {
-							Utils.addNewMarker(singleVariable, compilationUnit, cu);
+							Utils.addNewMarker(singleVariable, iCompilationUnit, compilationUnit);
 							markerCounter++;
 						} catch (CoreException e) {
 							e.printStackTrace();

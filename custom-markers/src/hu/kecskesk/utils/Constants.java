@@ -29,4 +29,18 @@ public class Constants {
 			"Optional quick fix", 
 			"In this method you could replace your nullable parameter with the use of Optional",
 			"Use Optional class instead of nullable parameter");
+	
+	public static final Constant IMMUTABLE_CONSTANT = new Constant(
+			null,
+			0,
+			"QuickFix for Immutable changes", 
+			"In this method you could replace your immutable collection with the new Collection Factory methods",
+			"Use factory method for immutable collections");
+	
+	public static final String MARKER_TYPE_LIST = "hu.kecskesk.custommarker.immutablelist";
+	public static final String MARKER_TYPE_SET = "hu.kecskesk.custommarker.immutableset";
+	public static final String MARKER_TYPE_MAP = "hu.kecskesk.custommarker.immutablemap";
+	public static final int JDT_PROBLEM_ID_LIST = 1231;
+	public static final int JDT_PROBLEM_ID_SET = 1232;
+	public static final int JDT_PROBLEM_ID_MAP = 1233;
 }

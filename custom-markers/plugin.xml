@@ -30,6 +30,13 @@
                 </markerType>
             </handledMarkerTypes>
         </quickFixProcessor>
+        <quickFixProcessor class="hu.kecskesk.custommarker.processor.QuickFixImmutables" id="hu.kecskesk.custommarker.quickFixProcessor5">
+            <handledMarkerTypes>
+                <markerType id="hu.kecskesk.custommarker.immutablelist"></markerType>
+                <markerType id="hu.kecskesk.custommarker.immutableset"></markerType>
+                <markerType id="hu.kecskesk.custommarker.immutablemap"></markerType>
+            </handledMarkerTypes>
+        </quickFixProcessor>
     </extension>
     <extension id="diamondmarker" name="Anonym Diamond Problem" point="org.eclipse.core.resources.markers">
         <super type="org.eclipse.jdt.core.problem" />
@@ -50,6 +57,24 @@
         <persistent value="true" />
     </extension>
     <extension id="optionalmarker" name="Null pointer Problem" point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.jdt.core.problem" />
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <super type="org.eclipse.core.resources.textmarker" />
+        <persistent value="true" />
+    </extension>
+    <extension id="immutablelist" name="Immutable list Problem" point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.jdt.core.problem" />
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <super type="org.eclipse.core.resources.textmarker" />
+        <persistent value="true" />
+    </extension>
+    <extension id="immutableset" name="Immutable set Problem" point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.jdt.core.problem" />
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <super type="org.eclipse.core.resources.textmarker" />
+        <persistent value="true" />
+    </extension>
+    <extension id="immutablemap" name="Immutable map Problem" point="org.eclipse.core.resources.markers">
         <super type="org.eclipse.jdt.core.problem" />
         <super type="org.eclipse.core.resources.problemmarker" />
         <super type="org.eclipse.core.resources.textmarker" />

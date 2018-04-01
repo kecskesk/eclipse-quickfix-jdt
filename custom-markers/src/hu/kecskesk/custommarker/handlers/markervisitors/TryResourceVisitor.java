@@ -12,7 +12,7 @@ public class TryResourceVisitor extends MarkerVisitor {
 		if (tryStatement.resources().size() == 1) {
 			if (tryStatement.resources().get(0) instanceof VariableDeclarationExpression) {
 				try {
-					Utils.addNewMarker((VariableDeclarationExpression) tryStatement.resources().get(0), compilationUnit, cu);
+					Utils.addNewMarker((VariableDeclarationExpression) tryStatement.resources().get(0), iCompilationUnit, compilationUnit);
 					markerCounter++;
 				} catch (CoreException e) {		
 					e.printStackTrace();

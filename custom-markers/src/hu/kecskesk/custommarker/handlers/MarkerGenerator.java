@@ -24,6 +24,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import hu.kecskesk.custommarker.Activator;
+import hu.kecskesk.custommarker.handlers.markervisitors.ImmutableDetectorVisitor;
 import hu.kecskesk.custommarker.handlers.markervisitors.OptionalBindingTraverserVisitor;
 import hu.kecskesk.custommarker.handlers.markervisitors.OptionalVariableCollectorVisitor;
 import hu.kecskesk.utils.Utils;
@@ -31,12 +32,13 @@ import hu.kecskesk.utils.Utils;
 public class MarkerGenerator extends AbstractHandler {
 
 	private int markerCounter;
+	private StringBuilder message;
 	
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 
-		StringBuilder message = new StringBuilder();
+		message = new StringBuilder();
 		markerCounter = 0;
 
 		IWorkspace workspace = ResourcesPlugin.getWorkspace();
@@ -47,14 +49,16 @@ public class MarkerGenerator extends AbstractHandler {
 			try {
 				if (project.isOpen() && project.hasNature(JavaCore.NATURE_ID)) {
 					IJavaProject javaProject = JavaCore.create(project);
-					findErrorsInProject(javaProject, message);
+					findErrorsInProject(javaProject);
 				}
 			} catch (CoreException e) {
 				e.printStackTrace();
 			}
 		}
 
-		message.append("I have added " + markerCounter + " markers for you.");
+		if (message.length() == 0) {
+			message.append("I have added " + markerCounter + " markers for you.");
+		}
 		
 		MessageDialog.openInformation(window.getShell(), Activator.ACTIVE_CONSTANT.problemText, message.toString());
 
@@ -68,49 +72,56 @@ public class MarkerGenerator extends AbstractHandler {
 		return null;
 	}
 
-	private void findErrorsInProject(IJavaProject javaProject, StringBuilder message) throws CoreException {
+	private void findErrorsInProject(IJavaProject javaProject) throws CoreException {
 		for (IPackageFragmentRoot mypackage : javaProject.getPackageFragmentRoots()) {
-			findErrorsInPackageFragmentRoot(mypackage, message);
+			findErrorsInPackageFragmentRoot(mypackage);
 		}
 	}
 
-	private void findErrorsInPackageFragmentRoot(IPackageFragmentRoot pkg, StringBuilder message) throws CoreException {
+	private void findErrorsInPackageFragmentRoot(IPackageFragmentRoot pkg) throws CoreException {
 		if (pkg.getKind() == IPackageFragmentRoot.K_SOURCE) {
 			IJavaElement[] children = pkg.getChildren();
 			for (IJavaElement pkgFrag : children) {
 				if (pkgFrag instanceof IPackageFragment) {
-					findErrorsInPackage((IPackageFragment) pkgFrag, message);
+					findErrorsInPackage((IPackageFragment) pkgFrag);
 				}
 			}
 		}
 	}
 
-	private void findErrorsInPackage(IPackageFragment mypackage, StringBuilder message) throws CoreException {
+	private void findErrorsInPackage(IPackageFragment mypackage) throws CoreException {
 		if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
-			for (ICompilationUnit compilationUnit : mypackage.getCompilationUnits()) {
-				CompilationUnit cu = Utils.parse(compilationUnit);
+			for (ICompilationUnit iCompilationUnit : mypackage.getCompilationUnits()) {
+				CompilationUnit compilationUnit = Utils.parse(iCompilationUnit);
 				List<MarkerVisitor> visitors = Activator.getActiveMarkerVisitor();
 				if (visitors.size() == 1) {
 					MarkerVisitor packageVisitor = visitors.get(0);
-					packageVisitor.setCompilationUnit(compilationUnit);
-					packageVisitor.setCu(cu);
+					packageVisitor.setICompilationUnit(iCompilationUnit);
+					packageVisitor.setCompaliationUnit(compilationUnit);
 					
-					cu.accept(packageVisitor);
+					compilationUnit.accept(packageVisitor);
 					markerCounter += packageVisitor.getMarkerCounter();
 				} else if(visitors.size() == 2) {
 					OptionalVariableCollectorVisitor collectorVisitor = (OptionalVariableCollectorVisitor) visitors.get(0);
 					OptionalBindingTraverserVisitor traverserVisitor = (OptionalBindingTraverserVisitor) visitors.get(1);
 					
-					collectorVisitor.setCompilationUnit(compilationUnit);
-					collectorVisitor.setCu(cu);
-					traverserVisitor.setCompilationUnit(compilationUnit);
-					traverserVisitor.setCu(cu);
+					collectorVisitor.setICompilationUnit(iCompilationUnit);
+					collectorVisitor.setCompaliationUnit(compilationUnit);
+					traverserVisitor.setICompilationUnit(iCompilationUnit);
+					traverserVisitor.setCompaliationUnit(compilationUnit);
 					
-					cu.accept(collectorVisitor);
+					compilationUnit.accept(collectorVisitor);
 					traverserVisitor.setVariables(collectorVisitor.getVariables());
-					cu.accept(traverserVisitor);
+					compilationUnit.accept(traverserVisitor);
 					
 					markerCounter += traverserVisitor.getMarkerCounter();
+				} else {
+					ImmutableDetectorVisitor packageVisitor = new ImmutableDetectorVisitor();
+					packageVisitor.setICompilationUnit(iCompilationUnit);
+					packageVisitor.setCompaliationUnit(compilationUnit);
+					
+					compilationUnit.accept(packageVisitor);
+					message.append(packageVisitor.getMessage());
 				}
 			}
 		}

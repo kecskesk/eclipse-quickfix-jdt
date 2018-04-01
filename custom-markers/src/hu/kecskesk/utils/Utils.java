@@ -50,8 +50,8 @@ public class Utils {
 		return (CompilationUnit) parser.createAST(null);
 	}
 
-	public static void addNewMarker(ASTNode variable, ICompilationUnit compilationUnit, CompilationUnit cu) throws CoreException {
-		IMarker newMarker = compilationUnit.getResource().createMarker(Activator.ACTIVE_CONSTANT.markerType);
+	public static void addNewMarker(ASTNode variable, ICompilationUnit iCompilationUnit, CompilationUnit compilationUnit) throws CoreException {
+		IMarker newMarker = iCompilationUnit.getResource().createMarker(Activator.ACTIVE_CONSTANT.markerType);
 
 		Map<String, Object> attributes = new HashMap<String, Object>();
 		attributes.put(IMarker.LOCATION, variable.toString());
@@ -63,7 +63,7 @@ public class Utils {
 		int length = variable.getLength();
 		attributes.put(IMarker.CHAR_START, startPosition);
 		attributes.put(IMarker.CHAR_END, startPosition + length);
-		attributes.put(IMarker.LINE_NUMBER, cu.getLineNumber(startPosition));
+		attributes.put(IMarker.LINE_NUMBER, compilationUnit.getLineNumber(startPosition));
 
 		newMarker.setAttributes(attributes);
 	}

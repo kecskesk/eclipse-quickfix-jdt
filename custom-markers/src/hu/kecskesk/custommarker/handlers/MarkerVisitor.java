@@ -6,18 +6,18 @@ import org.eclipse.jdt.core.dom.CompilationUnit;
 
 public abstract class MarkerVisitor extends ASTVisitor {
 	protected int markerCounter = 0;
-	protected ICompilationUnit compilationUnit;
-	protected CompilationUnit cu;
+	protected ICompilationUnit iCompilationUnit;
+	protected CompilationUnit compilationUnit;
 	
 	public int getMarkerCounter() {
 		return markerCounter;
 	}
 
-	public void setCompilationUnit(ICompilationUnit compilationUnit) {
-		this.compilationUnit = compilationUnit;
+	public void setICompilationUnit(ICompilationUnit iCompilationUnit) {
+		this.iCompilationUnit = iCompilationUnit;
 	}
 
-	public void setCu(CompilationUnit cu) {
-		this.cu = cu;
+	public void setCompaliationUnit(CompilationUnit compilationUnit) {
+		this.compilationUnit = compilationUnit;
 	}
 }

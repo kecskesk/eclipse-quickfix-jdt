@@ -9,7 +9,7 @@ import hu.kecskesk.utils.Utils;
 public class ForEachVisitor extends MarkerVisitor {
 	public boolean visit(EnhancedForStatement enhancedForStatement) {
 		try {
-			Utils.addNewMarker(enhancedForStatement, compilationUnit, cu);
+			Utils.addNewMarker(enhancedForStatement, iCompilationUnit, compilationUnit);
 			markerCounter++;
 		} catch(CoreException cEx) {
 			cEx.printStackTrace();

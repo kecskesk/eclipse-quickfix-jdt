@@ -14,5 +14,5 @@ Todo:
 
 * create a switch for the refactors 
 * test activating all of them
-* refactor (and finish) immutables 
+* finish immutables (only work for arrays aslist)
 * test code with jUnit

@@ -6,8 +6,6 @@ import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import hu.kecskesk.custommarker.handlers.MarkerVisitor;
-import hu.kecskesk.custommarker.handlers.markervisitors.OptionalBindingTraverserVisitor;
-import hu.kecskesk.custommarker.handlers.markervisitors.OptionalVariableCollectorVisitor;
 import hu.kecskesk.utils.Constant;
 import hu.kecskesk.utils.Constants;
 
@@ -25,15 +23,16 @@ public class Activator extends AbstractUIPlugin {
 	// public static final Constant ACTIVE_CONSTANT = Constants.ANONYM_CONSTANT;
 	// public static final Constant ACTIVE_CONSTANT = Constants.FOR_EACH_CONSTANT;
 	// public static final Constant ACTIVE_CONSTANT = Constants.TRY_RES_CONSTANT;
-	public static final Constant ACTIVE_CONSTANT = Constants.OPTIONAL_CONSTANT;
+	// public static final Constant ACTIVE_CONSTANT = Constants.OPTIONAL_CONSTANT;
+	public static final Constant ACTIVE_CONSTANT = Constants.IMMUTABLE_CONSTANT;
 	
 	public static List<MarkerVisitor> getActiveMarkerVisitor() {
 		// return List.of(new AnonymusClassVisitor());
 		// return List.of(new ForEachVisitor());
 		// return List.of(new TryResourceVisitor());
-		return List.of(new OptionalVariableCollectorVisitor(), new OptionalBindingTraverserVisitor());
+		return List.of();
 	}
-	
+		
 	/**
 	 * The constructor
 	 */

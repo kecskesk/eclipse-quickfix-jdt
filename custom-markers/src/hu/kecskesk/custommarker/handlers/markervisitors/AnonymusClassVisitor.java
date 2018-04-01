@@ -14,7 +14,7 @@ public class AnonymusClassVisitor extends MarkerVisitor {
 				ClassInstanceCreation classCreation = (ClassInstanceCreation) parameterizedType.getParent();
 				if (classCreation.getAnonymousClassDeclaration() != null) {
 					try {
-						Utils.addNewMarker(parameterizedType, compilationUnit, cu);
+						Utils.addNewMarker(parameterizedType, iCompilationUnit, compilationUnit);
 						markerCounter++;
 					} catch(CoreException cEx) {
 						cEx.printStackTrace();

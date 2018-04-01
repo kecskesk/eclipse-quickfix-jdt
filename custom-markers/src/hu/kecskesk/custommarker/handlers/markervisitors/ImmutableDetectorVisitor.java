@@ -1,26 +1,24 @@
-package hu.kecskesk.custommarker.handlers;
+package hu.kecskesk.custommarker.handlers.markervisitors;
 
 import java.util.HashMap;
 import java.util.Map;
 
 import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
-import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaModelMarker;
-import org.eclipse.jdt.core.dom.ASTVisitor;
-import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.MethodInvocation;
 import org.eclipse.jdt.core.dom.SimpleName;
 
-public class MarkerDetectorVisitor extends ASTVisitor {
+import hu.kecskesk.custommarker.handlers.MarkerVisitor;
+import hu.kecskesk.utils.Constants;
+
+public class ImmutableDetectorVisitor extends MarkerVisitor {
 	private enum ResultType {
 		SET, LIST, MAP
 	}
 	
-	private final StringBuilder message;
-	private final ICompilationUnit iCompilationUnit;
-	private final CompilationUnit compilationUnit;
+	private final StringBuilder message = new StringBuilder();
 	private static Map<ResultType, Map<String, String>> METHOD_CALLS;
 	private static Map<String, String> SET_METHOD_CALLS;
 	private static Map<String, String> LIST_METHOD_CALLS;
@@ -32,11 +30,6 @@ public class MarkerDetectorVisitor extends ASTVisitor {
 		METHOD_CALLS = Map.of(ResultType.SET, SET_METHOD_CALLS, ResultType.LIST, LIST_METHOD_CALLS, ResultType.MAP, MAP_METHOD_CALLS);
 	}
 	
-	public MarkerDetectorVisitor(ICompilationUnit iCompilationUnit, CompilationUnit compilationUnit, StringBuilder message) {
-		this.iCompilationUnit = iCompilationUnit;
-		this.compilationUnit = compilationUnit;
-		this.message = message;
-	}
 	
 	@Override
 	public boolean visit(MethodInvocation node) {
@@ -56,6 +49,9 @@ public class MarkerDetectorVisitor extends ASTVisitor {
 		return true;
 	}
 	
+	public StringBuilder getMessage() {
+		return message;
+	}	
 
 	private void foundResult(MethodInvocation methodInvocation, ResultType resultType) {
 		try {
@@ -63,22 +59,22 @@ public class MarkerDetectorVisitor extends ASTVisitor {
 			IMarker newMarker;
 			Map<String, Object> attributes = new HashMap<String, Object>();
 			attributes.put(IMarker.LOCATION, methodInvocation.toString());
-			attributes.put(IMarker.MESSAGE, "In this method you could replace your immutable collection with the new Collection Factory methods");
+			attributes.put(IMarker.MESSAGE, Constants.IMMUTABLE_CONSTANT.solutionText);
 			attributes.put(IMarker.SEVERITY, IMarker.SEVERITY_WARNING);
 			
 			
 			switch (resultType) {
 			case SET:
-				newMarker = iCompilationUnit.getResource().createMarker(MarkerGenerator.MY_MARKER_TYPE_SET);
-				attributes.put(IJavaModelMarker.ID, MarkerGenerator.MY_JDT_PROBLEM_ID_SET);
+				newMarker = iCompilationUnit.getResource().createMarker(Constants.MARKER_TYPE_SET);
+				attributes.put(IJavaModelMarker.ID, Constants.JDT_PROBLEM_ID_SET);
 				break;
 			case LIST:
-				newMarker = iCompilationUnit.getResource().createMarker(MarkerGenerator.MY_MARKER_TYPE_LIST);
-				attributes.put(IJavaModelMarker.ID, MarkerGenerator.MY_JDT_PROBLEM_ID_LIST);
+				newMarker = iCompilationUnit.getResource().createMarker(Constants.MARKER_TYPE_LIST);
+				attributes.put(IJavaModelMarker.ID, Constants.JDT_PROBLEM_ID_LIST);
 				break;
 			case MAP:
-				newMarker = iCompilationUnit.getResource().createMarker(MarkerGenerator.MY_MARKER_TYPE_MAP);
-				attributes.put(IJavaModelMarker.ID, MarkerGenerator.MY_JDT_PROBLEM_ID_MAP);
+				newMarker = iCompilationUnit.getResource().createMarker(Constants.MARKER_TYPE_MAP);
+				attributes.put(IJavaModelMarker.ID, Constants.JDT_PROBLEM_ID_MAP);
 				break;
 			default:
 				throw new UnsupportedOperationException("enums should not be other than the three predefined");
