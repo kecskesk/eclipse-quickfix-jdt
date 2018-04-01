@@ -4,8 +4,10 @@ https://github.com/kecskesk/java-plugin-v1
 
 Usage: 
 
-comment out needed plugin in
-* custom-markers/src/hu/kecskesk/custommarker/Activator.java
+* comment out needed plugin in
+```
+custom-markers/src/hu/kecskesk/custommarker/Activator.java
+```
 * select the menu item under refactorings
 
 Todo: 
