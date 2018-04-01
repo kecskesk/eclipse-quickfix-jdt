@@ -21,5 +21,12 @@ public class Constants {
 			1236,
 			"Try resources quick fix", 
 			"In this method you could use the new try resource technique",
-			"Remove redundant type parameter");
+			"Use the new try resource technique");
+	
+	public static final Constant OPTIONAL_CONSTANT = new Constant(
+			"hu.kecskesk.custommarker.optionalmarker",
+			1237,
+			"Optional quick fix", 
+			"In this method you could replace your nullable parameter with the use of Optional",
+			"Use Optional class instead of nullable parameter");
 }

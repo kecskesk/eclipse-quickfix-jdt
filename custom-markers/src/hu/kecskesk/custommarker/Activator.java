@@ -1,11 +1,13 @@
 package hu.kecskesk.custommarker;
 
+import java.util.List;
+
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 import org.osgi.framework.BundleContext;
 
 import hu.kecskesk.custommarker.handlers.MarkerVisitor;
-import hu.kecskesk.custommarker.handlers.markervisitors.ForEachVisitor;
-import hu.kecskesk.custommarker.handlers.markervisitors.TryResourceVisitor;
+import hu.kecskesk.custommarker.handlers.markervisitors.OptionalBindingTraverserVisitor;
+import hu.kecskesk.custommarker.handlers.markervisitors.OptionalVariableCollectorVisitor;
 import hu.kecskesk.utils.Constant;
 import hu.kecskesk.utils.Constants;
 
@@ -22,12 +24,14 @@ public class Activator extends AbstractUIPlugin {
 
 	// public static final Constant ACTIVE_CONSTANT = Constants.ANONYM_CONSTANT;
 	// public static final Constant ACTIVE_CONSTANT = Constants.FOR_EACH_CONSTANT;
-	public static final Constant ACTIVE_CONSTANT = Constants.TRY_RES_CONSTANT;
+	// public static final Constant ACTIVE_CONSTANT = Constants.TRY_RES_CONSTANT;
+	public static final Constant ACTIVE_CONSTANT = Constants.OPTIONAL_CONSTANT;
 	
-	public static MarkerVisitor getActiveMarkerVisitor() {
-		// return new AnonymusClassVisitor();
-		// return new ForEachVisitor();
-		return new TryResourceVisitor();
+	public static List<MarkerVisitor> getActiveMarkerVisitor() {
+		// return List.of(new AnonymusClassVisitor());
+		// return List.of(new ForEachVisitor());
+		// return List.of(new TryResourceVisitor());
+		return List.of(new OptionalVariableCollectorVisitor(), new OptionalBindingTraverserVisitor());
 	}
 	
 	/**

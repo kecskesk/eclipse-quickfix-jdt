@@ -1,5 +1,7 @@
 package hu.kecskesk.custommarker.handlers;
 
+import java.util.List;
+
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
@@ -22,6 +24,8 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import hu.kecskesk.custommarker.Activator;
+import hu.kecskesk.custommarker.handlers.markervisitors.OptionalBindingTraverserVisitor;
+import hu.kecskesk.custommarker.handlers.markervisitors.OptionalVariableCollectorVisitor;
 import hu.kecskesk.utils.Utils;
 
 public class MarkerGenerator extends AbstractHandler {
@@ -85,12 +89,29 @@ public class MarkerGenerator extends AbstractHandler {
 		if (mypackage.getKind() == IPackageFragmentRoot.K_SOURCE) {
 			for (ICompilationUnit compilationUnit : mypackage.getCompilationUnits()) {
 				CompilationUnit cu = Utils.parse(compilationUnit);
-				MarkerVisitor packageVisitor = Activator.getActiveMarkerVisitor();
-				packageVisitor.setCompilationUnit(compilationUnit);
-				packageVisitor.setCu(cu);
-				
-				cu.accept(packageVisitor);
-				markerCounter += packageVisitor.getMarkerCounter();
+				List<MarkerVisitor> visitors = Activator.getActiveMarkerVisitor();
+				if (visitors.size() == 1) {
+					MarkerVisitor packageVisitor = visitors.get(0);
+					packageVisitor.setCompilationUnit(compilationUnit);
+					packageVisitor.setCu(cu);
+					
+					cu.accept(packageVisitor);
+					markerCounter += packageVisitor.getMarkerCounter();
+				} else if(visitors.size() == 2) {
+					OptionalVariableCollectorVisitor collectorVisitor = (OptionalVariableCollectorVisitor) visitors.get(0);
+					OptionalBindingTraverserVisitor traverserVisitor = (OptionalBindingTraverserVisitor) visitors.get(1);
+					
+					collectorVisitor.setCompilationUnit(compilationUnit);
+					collectorVisitor.setCu(cu);
+					traverserVisitor.setCompilationUnit(compilationUnit);
+					traverserVisitor.setCu(cu);
+					
+					cu.accept(collectorVisitor);
+					traverserVisitor.setVariables(collectorVisitor.getVariables());
+					cu.accept(traverserVisitor);
+					
+					markerCounter += traverserVisitor.getMarkerCounter();
+				}
 			}
 		}
 	}

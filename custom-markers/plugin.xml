@@ -23,6 +23,13 @@
                 </markerType>
             </handledMarkerTypes>
         </quickFixProcessor>
+        <quickFixProcessor class="hu.kecskesk.custommarker.processor.QuickFixNullPointers" id="hu.kecskesk.custommarker.quickFixProcessor4">
+            <handledMarkerTypes>
+                <markerType
+                      id="hu.kecskesk.custommarker.optionalmarker">
+                </markerType>
+            </handledMarkerTypes>
+        </quickFixProcessor>
     </extension>
     <extension id="diamondmarker" name="Anonym Diamond Problem" point="org.eclipse.core.resources.markers">
         <super type="org.eclipse.jdt.core.problem" />
@@ -37,6 +44,12 @@
         <persistent value="true" />
     </extension>
     <extension id="tryresourcemarker" name="Try-resource Problem" point="org.eclipse.core.resources.markers">
+        <super type="org.eclipse.jdt.core.problem" />
+        <super type="org.eclipse.core.resources.problemmarker" />
+        <super type="org.eclipse.core.resources.textmarker" />
+        <persistent value="true" />
+    </extension>
+    <extension id="optionalmarker" name="Null pointer Problem" point="org.eclipse.core.resources.markers">
         <super type="org.eclipse.jdt.core.problem" />
         <super type="org.eclipse.core.resources.problemmarker" />
         <super type="org.eclipse.core.resources.textmarker" />

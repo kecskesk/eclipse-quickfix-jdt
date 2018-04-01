@@ -1,4 +1,4 @@
-package hu.kecskesk.custommarker.processor;
+package hu.kecskesk.custommarker.handlers.markervisitors;
 
 import java.util.Optional;
 
