@@ -5,6 +5,7 @@ import org.osgi.framework.BundleContext;
 
 import hu.kecskesk.custommarker.handlers.MarkerVisitor;
 import hu.kecskesk.custommarker.handlers.markervisitors.ForEachVisitor;
+import hu.kecskesk.custommarker.handlers.markervisitors.TryResourceVisitor;
 import hu.kecskesk.utils.Constant;
 import hu.kecskesk.utils.Constants;
 
@@ -20,11 +21,13 @@ public class Activator extends AbstractUIPlugin {
 	private static Activator plugin;
 
 	// public static final Constant ACTIVE_CONSTANT = Constants.ANONYM_CONSTANT;
-	public static final Constant ACTIVE_CONSTANT = Constants.FOR_EACH_CONSTANT;
+	// public static final Constant ACTIVE_CONSTANT = Constants.FOR_EACH_CONSTANT;
+	public static final Constant ACTIVE_CONSTANT = Constants.TRY_RES_CONSTANT;
 	
 	public static MarkerVisitor getActiveMarkerVisitor() {
 		// return new AnonymusClassVisitor();
-		return new ForEachVisitor();
+		// return new ForEachVisitor();
+		return new TryResourceVisitor();
 	}
 	
 	/**

@@ -15,4 +15,11 @@ public class Constants {
 			"Anonym inner class quick fix", 
 			"At this line you could remove the type parameter and use diamond operator",
 			"Remove redundant type parameter");
+	
+	public static final Constant TRY_RES_CONSTANT = new Constant(
+			"hu.kecskesk.custommarker.tryresourcemarker",
+			1236,
+			"Try resources quick fix", 
+			"In this method you could use the new try resource technique",
+			"Remove redundant type parameter");
 }

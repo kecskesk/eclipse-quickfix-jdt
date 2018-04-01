@@ -55,7 +55,7 @@ public class Utils {
 
 		Map<String, Object> attributes = new HashMap<String, Object>();
 		attributes.put(IMarker.LOCATION, variable.toString());
-		attributes.put(IMarker.MESSAGE, Activator.ACTIVE_CONSTANT.problemText);
+		attributes.put(IMarker.MESSAGE, Activator.ACTIVE_CONSTANT.solutionText);
 		attributes.put(IMarker.SEVERITY, IMarker.SEVERITY_WARNING);
 		attributes.put(IJavaModelMarker.ID, Activator.ACTIVE_CONSTANT.problemId);
 
