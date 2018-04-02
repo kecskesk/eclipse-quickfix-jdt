@@ -25,8 +25,6 @@ import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 
-import hu.kecskesk.custommarker.handlers.markervisitors.MethodUsageHandlerVisitor;
-import hu.kecskesk.custommarker.handlers.markervisitors.ParameterUsageHandlerVisitor;
 import hu.kecskesk.utils.Constants;
 import hu.kecskesk.utils.Utils;
 
