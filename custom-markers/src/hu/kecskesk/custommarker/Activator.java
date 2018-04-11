@@ -20,17 +20,12 @@ public class Activator extends AbstractUIPlugin {
 	// The shared instance
 	private static Activator plugin;
 
-	// public static final Constant ACTIVE_CONSTANT = Constants.ANONYM_CONSTANT;
-	// public static final Constant ACTIVE_CONSTANT = Constants.FOR_EACH_CONSTANT;
-	// public static final Constant ACTIVE_CONSTANT = Constants.TRY_RES_CONSTANT;
-	// public static final Constant ACTIVE_CONSTANT = Constants.OPTIONAL_CONSTANT;
-	public static final Constant ACTIVE_CONSTANT = Constants.IMMUTABLE_CONSTANT;
+	public static Constant ACTIVE_CONSTANT = Constants.IMMUTABLE_CONSTANT;
 	
-	public static List<MarkerVisitor> getActiveMarkerVisitor() {
-		// return List.of(new AnonymusClassVisitor());
-		// return List.of(new ForEachVisitor());
-		// return List.of(new TryResourceVisitor());
-		return List.of();
+	public static List<MarkerVisitor> activeMarkerVisitor = List.of();
+	
+	public static List<MarkerVisitor> getActiveMarkerVisitor() {	
+		return activeMarkerVisitor;
 	}
 		
 	/**

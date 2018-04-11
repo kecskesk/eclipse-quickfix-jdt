@@ -5,7 +5,7 @@ public class Constants {
 	public static final Constant FOR_EACH_CONSTANT = new Constant(
 			"hu.kecskesk.custommarker.foreachmarker", 
 			1234, 
-			"forEach method quick fix", 
+			"ForEach method quick fix", 
 			"At this line you could replace a for each cycle with Stream API",
 			"Use Stream API");
 	

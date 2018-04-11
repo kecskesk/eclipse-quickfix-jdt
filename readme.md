@@ -12,7 +12,5 @@ custom-markers/src/hu/kecskesk/custommarker/Activator.java
 
 Todo: 
 
-* create a switch for the refactors 
-* test activating all of them
 * finish immutables (only work for arrays aslist)
 * test code with jUnit

@@ -88,52 +88,99 @@
        </category>
        <command
              categoryId="hu.kecskesk.custommarker.commands.category"
-             id="hu.kecskesk.custommarker.commands.sampleCommand"
+             id="hu.kecskesk.custommarker.commands.addMarkerCommand"
              name="Add my markers">
        </command>
+       <command
+		      defaultHandler="hu.kecskesk.custommarker.handlers.RadioHandler"
+		      id="hu.kecskesk.custommarker.command.radioCommand"
+		      name="Radio Plugin Switch">
+		   <commandParameter
+		         id="org.eclipse.ui.commands.radioStateParameter"
+		         name="Radio Plugin Name"
+		         optional="false">
+		   </commandParameter>
+		   <state
+		         class="org.eclipse.ui.handlers.RadioState:Immutable"
+		         id="org.eclipse.ui.commands.radioState">
+		   </state>
+		</command>
     </extension>
     <extension
           point="org.eclipse.ui.handlers">
        <handler
              class="hu.kecskesk.custommarker.handlers.MarkerGenerator"
-             commandId="hu.kecskesk.custommarker.commands.sampleCommand">
+             commandId="hu.kecskesk.custommarker.commands.addMarkerCommand">
        </handler>
-    </extension>
-    <extension
-          point="org.eclipse.ui.bindings">
-       <key
-             commandId="hu.kecskesk.custommarker.commands.sampleCommand"
-             contextId="org.eclipse.ui.contexts.window"
-             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
-             sequence="M1+6">
-       </key>
     </extension>
     <extension
           point="org.eclipse.ui.menus">
        <menuContribution
              locationURI="menu:org.eclipse.ui.main.menu?after=additions">
           <menu
-                id="hu.kecskesk.custommarker.menus.sampleMenu"
+                id="hu.kecskesk.custommarker.menus.refactoringMenu"
                 label="Refactorings"
                 mnemonic="M">
              <command
-                   commandId="hu.kecskesk.custommarker.commands.sampleCommand"
-                   id="hu.kecskesk.custommarker.menus.sampleCommand"
+                   commandId="hu.kecskesk.custommarker.commands.addMarkerCommand"
+                   id="hu.kecskesk.custommarker.menus.addMarkerCommand"
                    mnemonic="S">
              </command>
+		    <separator
+		            name="hu.kecskesk.custommarker.menu.separator1"
+		            visible="true">
+		    </separator>
+		    <command
+		            commandId="hu.kecskesk.custommarker.command.radioCommand"
+		            id="hu.kecskesk.custommarker.menu.radio1"
+		            label="Immutable"
+		            style="radio">
+		        <parameter
+		                name="org.eclipse.ui.commands.radioStateParameter"
+		                value="Immutable">
+		        </parameter>
+		    </command>
+		    <command
+		            commandId="hu.kecskesk.custommarker.command.radioCommand"
+		            id="hu.kecskesk.custommarker.menu.radio2"
+		            label="Optional"
+		            style="radio">
+		        <parameter
+		            name="org.eclipse.ui.commands.radioStateParameter"
+		            value="Optional">
+		        </parameter>
+		    </command>
+		    <command
+		            commandId="hu.kecskesk.custommarker.command.radioCommand"
+		            id="hu.kecskesk.custommarker.menu.radio3"
+		            label="Diamond Operator"
+		            style="radio">
+		        <parameter
+		                name="org.eclipse.ui.commands.radioStateParameter"
+		                value="Diamond Operator">
+		        </parameter>
+		    </command>
+		    <command
+		            commandId="hu.kecskesk.custommarker.command.radioCommand"
+		            id="hu.kecskesk.custommarker.menu.radio4"
+		            label="Try with Resources"
+		            style="radio">
+		        <parameter
+		                name="org.eclipse.ui.commands.radioStateParameter"
+		                value="Try with Resources">
+		        </parameter>
+		    </command>
+		    <command
+		            commandId="hu.kecskesk.custommarker.command.radioCommand"
+		            id="hu.kecskesk.custommarker.menu.radio5"
+		            label="For Each"
+		            style="radio">
+		        <parameter
+		                name="org.eclipse.ui.commands.radioStateParameter"
+		                value="For Each">
+		        </parameter>
+		    </command>
           </menu>
-       </menuContribution>
-       <menuContribution
-             locationURI="toolbar:org.eclipse.ui.main.toolbar?after=additions">
-          <toolbar
-                id="hu.kecskesk.custommarker.toolbars.sampleToolbar">
-             <command
-                   commandId="hu.kecskesk.custommarker.commands.sampleCommand"
-                   icon="icons/sample.png"
-                   id="hu.kecskesk.custommarker.toolbars.sampleCommand"
-                   tooltip="Add my markers">
-             </command>
-          </toolbar>
        </menuContribution>
     </extension>
 </plugin>
