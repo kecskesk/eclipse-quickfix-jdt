@@ -25,8 +25,8 @@ import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
 
+import hu.kecskesk.utils.CUParser;
 import hu.kecskesk.utils.Constants;
-import hu.kecskesk.utils.Utils;
 
 public class QuickFixNullPointers extends QuickFixBase {
 	@Override
@@ -90,7 +90,7 @@ public class QuickFixNullPointers extends QuickFixBase {
 						IPackageFragment iPackageFragment = (IPackageFragment)child;							
 						ICompilationUnit[] compUnits = iPackageFragment.getCompilationUnits();
 						for (ICompilationUnit iCompilationUnit: compUnits) {
-							CompilationUnit otherClass = Utils.parse(iCompilationUnit);
+							CompilationUnit otherClass = new CUParser(iCompilationUnit).parse();
 							if (!iCompilationUnit.getElementName().equals(cu.getElementName())) {	
 								ASTRewrite rewriteOtherClass = ASTRewrite.create(otherClass.getAST());
 								List<Integer> counter = new ArrayList<>();

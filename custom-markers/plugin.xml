@@ -109,7 +109,7 @@
     <extension
           point="org.eclipse.ui.handlers">
        <handler
-             class="hu.kecskesk.custommarker.handlers.MarkerGenerator"
+             class="hu.kecskesk.custommarker.handlers.RefactoringsHandler"
              commandId="hu.kecskesk.custommarker.commands.addMarkerCommand">
        </handler>
     </extension>

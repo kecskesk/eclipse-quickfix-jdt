@@ -20,9 +20,9 @@ public class Activator extends AbstractUIPlugin {
 	// The shared instance
 	private static Activator plugin;
 
-	public static Constant ACTIVE_CONSTANT = Constants.IMMUTABLE_CONSTANT;
+	public static Constant ACTIVE_CONSTANT;
 	
-	public static List<MarkerVisitor> activeMarkerVisitor = List.of();
+	public static List<MarkerVisitor> activeMarkerVisitor;
 	
 	public static List<MarkerVisitor> getActiveMarkerVisitor() {	
 		return activeMarkerVisitor;
@@ -32,6 +32,8 @@ public class Activator extends AbstractUIPlugin {
 	 * The constructor
 	 */
 	public Activator() {
+		ACTIVE_CONSTANT = Constants.IMMUTABLE_CONSTANT; 
+		activeMarkerVisitor = List.of();
 	}
 
 	/*

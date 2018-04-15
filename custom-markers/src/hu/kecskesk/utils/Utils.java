@@ -8,9 +8,7 @@ import org.eclipse.core.resources.IMarker;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.IJavaModelMarker;
-import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.Expression;
 import org.eclipse.jdt.core.dom.InfixExpression;
@@ -40,14 +38,6 @@ public class Utils {
 
 	public static boolean isSimpleName(Expression exp) {
 		return ASTNode.SIMPLE_NAME == exp.getNodeType();
-	}
-	
-	public static CompilationUnit parse(ICompilationUnit unit) {
-		ASTParser parser = ASTParser.newParser(AST.JLS9);
-		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		parser.setSource(unit);
-		parser.setResolveBindings(true);
-		return (CompilationUnit) parser.createAST(null);
 	}
 
 	public static void addNewMarker(ASTNode variable, ICompilationUnit iCompilationUnit, CompilationUnit compilationUnit) throws CoreException {
