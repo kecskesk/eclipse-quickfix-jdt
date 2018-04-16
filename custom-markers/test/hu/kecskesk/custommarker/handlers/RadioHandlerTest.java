@@ -3,16 +3,9 @@ package hu.kecskesk.custommarker.handlers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import java.util.HashMap;
-import java.util.Map;
-
-import org.eclipse.core.commands.Command;
-import org.eclipse.core.commands.CommandManager;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
-import org.eclipse.core.commands.State;
 import org.eclipse.ui.handlers.RadioState;
-import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 
 import hu.kecskesk.custommarker.Activator;
@@ -21,24 +14,7 @@ import hu.kecskesk.custommarker.handlers.markervisitors.ForEachVisitor;
 import hu.kecskesk.custommarker.handlers.markervisitors.TryResourceVisitor;
 import hu.kecskesk.utils.Constants;
 
-class RadioHandlerTest {
-	ExecutionEvent radioEvent;
-	RadioHandler radioHandler;
-	Map<String, String> parameterMap;
-	Command command;
-	State commandState;
-	String defaultState = "defaultState";
-	
-	@BeforeEach
-	void setup() {
-		parameterMap = new HashMap<>();
-		radioHandler = new RadioHandler();	
-		commandState = new State();	
-		commandState.setValue(defaultState);
-		command = new CommandManager().getCommand("commandID");
-		command.addState(RadioState.STATE_ID, commandState);
-	}
-	
+class RadioHandlerTest extends TestBase {
 	@Test
 	void testRadioHandleImmutable() throws ExecutionException {
 		// Arrange
