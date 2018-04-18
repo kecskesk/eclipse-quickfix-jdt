@@ -1,4 +1,4 @@
-package hu.kecskesk.custommarker.handlers;
+package hu.kecskesk.custommarker;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -10,16 +10,18 @@ import org.eclipse.core.commands.State;
 import org.eclipse.ui.handlers.RadioState;
 import org.junit.jupiter.api.BeforeEach;
 
+import hu.kecskesk.custommarker.handlers.RadioHandler;
+
 public class TestBase {
-	ExecutionEvent radioEvent;
-	RadioHandler radioHandler;
-	Map<String, String> parameterMap;
-	Command command;
-	State commandState;
-	String defaultState = "defaultState";
+	protected ExecutionEvent radioEvent;
+	protected RadioHandler radioHandler;
+	protected Map<String, String> parameterMap;
+	protected Command command;
+	protected State commandState;
+	protected String defaultState = "defaultState";
 	
 	@BeforeEach
-	void setup() {
+	protected void setup() {
 		parameterMap = new HashMap<>();
 		radioHandler = new RadioHandler();	
 		commandState = new State();	

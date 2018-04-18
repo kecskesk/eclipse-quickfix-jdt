@@ -3,18 +3,41 @@ package hu.kecskesk.custommarker.handlers;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import org.eclipse.core.commands.CommandManager;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.core.commands.State;
 import org.eclipse.ui.handlers.RadioState;
 import org.junit.jupiter.api.Test;
 
 import hu.kecskesk.custommarker.Activator;
+import hu.kecskesk.custommarker.TestBase;
 import hu.kecskesk.custommarker.handlers.markervisitors.AnonymusClassVisitor;
 import hu.kecskesk.custommarker.handlers.markervisitors.ForEachVisitor;
 import hu.kecskesk.custommarker.handlers.markervisitors.TryResourceVisitor;
 import hu.kecskesk.utils.Constants;
 
 class RadioHandlerTest extends TestBase {
+	@Test
+	void testRadioHandleDefault() throws ExecutionException {
+		// Arrange
+		String immutableValue = "Immutable";
+		parameterMap.put(RadioState.PARAMETER_ID, immutableValue);
+		commandState = new State();	
+		commandState.setValue(immutableValue);
+		command = new CommandManager().getCommand("commandID");
+		command.addState(RadioState.STATE_ID, commandState);
+		new Activator();
+		
+		// Act
+		radioEvent = new ExecutionEvent(command, parameterMap, null, null);
+		radioHandler.execute(radioEvent);
+		
+		// Assert
+		assertEquals(Activator.ACTIVE_CONSTANT, Constants.IMMUTABLE_CONSTANT);
+		assertEquals(Activator.activeMarkerVisitor.size(), 0);
+	}
+	
 	@Test
 	void testRadioHandleImmutable() throws ExecutionException {
 		// Arrange

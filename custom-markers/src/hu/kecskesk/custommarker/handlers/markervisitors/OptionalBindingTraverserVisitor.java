@@ -1,5 +1,6 @@
 package hu.kecskesk.custommarker.handlers.markervisitors;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Optional;
 
@@ -14,7 +15,7 @@ import hu.kecskesk.custommarker.handlers.MarkerVisitor;
 import hu.kecskesk.utils.Utils;
 
 public class OptionalBindingTraverserVisitor extends MarkerVisitor { 
-	private Map<MethodDeclaration, Map<SingleVariableDeclaration, Boolean>> variables;
+	private Map<MethodDeclaration, Map<SingleVariableDeclaration, Boolean>> variables = new HashMap<>();
 	
 	public void setVariables(Map<MethodDeclaration, Map<SingleVariableDeclaration, Boolean>> variables) {
 		this.variables = variables;
