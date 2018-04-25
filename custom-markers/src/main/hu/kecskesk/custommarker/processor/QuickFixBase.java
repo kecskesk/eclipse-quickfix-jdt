@@ -8,7 +8,6 @@ import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
-import org.eclipse.jdt.internal.ui.JavaPluginImages;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
 import org.eclipse.jdt.ui.text.java.IProblemLocation;
@@ -16,8 +15,11 @@ import org.eclipse.jdt.ui.text.java.IQuickFixProcessor;
 import org.eclipse.jdt.ui.text.java.correction.ASTRewriteCorrectionProposal;
 import org.eclipse.swt.graphics.Image;
 
-@SuppressWarnings("restriction")
+import hu.kecskesk.utils.ImageCollector;
+
 public abstract class QuickFixBase implements IQuickFixProcessor {
+	static ImageCollector imageCollector = new ImageCollector();
+	
 	@Override
 	public IJavaCompletionProposal[] getCorrections(IInvocationContext context, IProblemLocation[] locations)
 			throws CoreException {
@@ -38,7 +40,7 @@ public abstract class QuickFixBase implements IQuickFixProcessor {
 
 	protected static ASTRewriteCorrectionProposal createProposalFromRewrite(ICompilationUnit cu, ASTRewrite rewrite,
 			String label) {
-		Image image = JavaPluginImages.get(JavaPluginImages.IMG_CORRECTION_ADD);
+		Image image = imageCollector.collect();
 		ASTRewriteCorrectionProposal proposal = new ASTRewriteCorrectionProposal(label, cu, rewrite, 6, image);
 		return proposal;
 	}

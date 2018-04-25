@@ -25,7 +25,7 @@ public class QuickFixTryResources extends QuickFixBase {
 	@Override
 	public boolean hasCorrections(ICompilationUnit unit, int problemId) {
 		return Constants.TRY_RES_CONSTANT.problemId == problemId;
-	}
+	} 
 	
 	@SuppressWarnings("unchecked")
 	public void addProposal(IInvocationContext context, IProblemLocation problem,
