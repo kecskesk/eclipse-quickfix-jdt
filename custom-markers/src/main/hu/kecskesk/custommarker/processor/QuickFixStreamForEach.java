@@ -52,6 +52,7 @@ public class QuickFixStreamForEach extends QuickFixBase {
 		
 		LambdaExpression lambdaExpression = ast.newLambdaExpression();
 		lambdaExpression.parameters().add(variableDeclarationFragment);
+				
 		lambdaExpression.setBody(rewrite.createCopyTarget(enhancedFor.getBody()));
 
 		MethodInvocation methodInvocation = ast.newMethodInvocation();

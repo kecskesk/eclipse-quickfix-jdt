@@ -40,7 +40,6 @@ public class QuickFixDiamondOperator extends QuickFixBase {
 		}
 		
 		ParameterizedType oldType = (ParameterizedType) selectedNode;
-		
 		SimpleType parameterOfType = (SimpleType) rewrite.createCopyTarget(oldType.getType());
 		ParameterizedType newType = ast.newParameterizedType(parameterOfType);
 		rewrite.replace(selectedNode, newType, null);
