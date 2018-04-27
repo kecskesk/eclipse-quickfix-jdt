@@ -34,7 +34,8 @@ public class ParameterUsageHandlerVisitor extends ASTVisitor {
 		IBinding bindingVisited = node.resolveBinding();
 		IBinding bindingParameter = oldParameter.getName().resolveBinding();
 
-		if (bindingVisited.equals(bindingParameter)) {
+		if (bindingVisited != null && bindingParameter != null 
+				&& bindingVisited.equals(bindingParameter)) {
 			handleUsageOfParameter(node, rewrite);
 		}
 		return false;

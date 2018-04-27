@@ -7,6 +7,9 @@ import org.eclipse.core.commands.Command;
 import org.eclipse.core.commands.CommandManager;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.State;
+import org.eclipse.jdt.core.dom.AST;
+import org.eclipse.jdt.core.dom.ASTNode;
+import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.ui.handlers.RadioState;
 import org.junit.jupiter.api.BeforeEach;
 
@@ -28,5 +31,18 @@ public class TestBase {
 		commandState.setValue(defaultState);
 		command = new CommandManager().getCommand("commandID");
 		command.addState(RadioState.STATE_ID, commandState);
+	}
+	
+	public ASTNode testParse(char[] source) {
+		ASTParser parser = ASTParser.newParser(AST.JLS9);
+		parser.setKind(ASTParser.K_COMPILATION_UNIT);
+		parser.setSource(source);
+		parser.setEnvironment(null, null, null, true);
+		parser.setUnitName("Demo.java");
+		parser.setResolveBindings(true);
+		parser.setStatementsRecovery(true);
+		parser.setBindingsRecovery(true);
+		
+		return parser.createAST(null);
 	}
 }

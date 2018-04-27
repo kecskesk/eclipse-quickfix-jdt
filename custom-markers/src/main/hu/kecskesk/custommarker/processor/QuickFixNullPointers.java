@@ -82,6 +82,17 @@ public class QuickFixNullPointers extends QuickFixBase {
 
 		// 3.2 Check outside this class
 		List<ASTRewrite> rewriteOtherClasses = new ArrayList<>();
+		if (cu.getJavaProject() != null) {
+			checkOtherClasses(proposals, cu, label, oldParameter, method, rewriteOtherClasses);			
+		}
+
+		// 4. Send the proposal
+		proposals.add(createProposalFromRewrite(cu, rewrite, label));	
+	}
+
+	private void checkOtherClasses(Collection<IJavaCompletionProposal> proposals, ICompilationUnit cu, String label,
+			SingleVariableDeclaration oldParameter, MethodDeclaration method, List<ASTRewrite> rewriteOtherClasses)
+			throws JavaModelException {
 		IPackageFragmentRoot[] allPackageRoots = cu.getJavaProject().getPackageFragmentRoots();
 		for (IPackageFragmentRoot iPackageFragmentRoot : allPackageRoots) {
 			if (iPackageFragmentRoot.getKind() == IPackageFragmentRoot.K_SOURCE) {
@@ -106,9 +117,6 @@ public class QuickFixNullPointers extends QuickFixBase {
 				}
 			}
 		}
-
-		// 4. Send the proposal
-		proposals.add(createProposalFromRewrite(cu, rewrite, label));	
 	}
 
 	@SuppressWarnings("unchecked")

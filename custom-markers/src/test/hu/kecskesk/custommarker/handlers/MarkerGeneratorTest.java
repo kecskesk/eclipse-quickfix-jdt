@@ -12,7 +12,6 @@ import org.eclipse.core.resources.IResource;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.AST;
-import org.eclipse.jdt.core.dom.ASTParser;
 import org.eclipse.jdt.core.dom.Block;
 import org.eclipse.jdt.core.dom.CompilationUnit;
 import org.eclipse.jdt.core.dom.MethodDeclaration;
@@ -193,17 +192,8 @@ class MarkerGeneratorTest extends TestBase {
 		radioHandler.execute(radioEvent);
 	}
 
-	private void testWithParser(char[] source) {
-		ASTParser parser = ASTParser.newParser(AST.JLS9);
-		parser.setKind(ASTParser.K_COMPILATION_UNIT);
-		parser.setSource(source);
-		parser.setEnvironment(null, null, null, true);
-		parser.setUnitName("Demo.java");
-		parser.setResolveBindings(true);
-		parser.setStatementsRecovery(true);
-		parser.setBindingsRecovery(true);
-		
-		when(cuParser.parse()).thenReturn((CompilationUnit) parser.createAST(null));
+	private void testWithParser(char[] source) {		
+		when(cuParser.parse()).thenReturn((CompilationUnit) testParse(source));
 	}
 
 	private ICompilationUnit setUpMocksForMarkerType(String... markerTypes) throws CoreException {

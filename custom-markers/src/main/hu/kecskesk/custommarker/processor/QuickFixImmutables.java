@@ -7,9 +7,7 @@ import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.JavaModelException;
 import org.eclipse.jdt.core.dom.AST;
 import org.eclipse.jdt.core.dom.ASTNode;
-import org.eclipse.jdt.core.dom.ITypeBinding;
 import org.eclipse.jdt.core.dom.MethodInvocation;
-import org.eclipse.jdt.core.dom.SimpleName;
 import org.eclipse.jdt.core.dom.rewrite.ASTRewrite;
 import org.eclipse.jdt.ui.text.java.IInvocationContext;
 import org.eclipse.jdt.ui.text.java.IJavaCompletionProposal;
@@ -63,25 +61,6 @@ public class QuickFixImmutables extends QuickFixBase {
 			oldMethodInvocation.arguments().forEach((argument) -> {
 				listFactory.arguments().add(rewrite.createCopyTarget((ASTNode) argument));
 			});
-		} else {
-			if (oldMethodInvocation.arguments().size() == 1) {
-				Object methodArgument = oldMethodInvocation.arguments().get(0);
-				if (methodArgument instanceof SimpleName) {
-					// IBinding argumentBinding = ((SimpleName) methodArgument).resolveBinding();	
-					ITypeBinding typeBinding = ((SimpleName) methodArgument).resolveTypeBinding();
-					if (typeBinding.getName().startsWith("List")) {
-						// get list adds 
-					} else if (typeBinding.getName().startsWith("Set")) {
-						// get set adds
-					} else if (typeBinding.getName().startsWith("Map")) {
-						// get map adds
-					}
-				}
-			}
-			
-			// find collection variables 
-			// add them to list 
-			// remove them from code
 		}
 		rewrite.replace(selectedNode, listFactory, null);
 

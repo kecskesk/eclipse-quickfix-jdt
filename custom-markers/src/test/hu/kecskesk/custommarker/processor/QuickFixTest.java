@@ -4,6 +4,7 @@ package hu.kecskesk.custommarker.processor;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.mockito.Mockito.*;
 
+import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.CoreException;
 import org.eclipse.jdt.core.ICompilationUnit;
 import org.eclipse.jdt.core.dom.*;
@@ -194,48 +195,93 @@ class QuickFixTest extends TestBase {
 		
 		assertEquals("Use the new try resource technique", proposal.getName());
 	}
-
-	@SuppressWarnings("unchecked")
+	
 	@Test
-	void nullPointerProcessorTest() throws CoreException {		 
-		quickFixBase = new QuickFixNullPointers();
-		
-		SimpleName nodeTypeName = ast.newSimpleName("NodeType");
-		nodeTypeName.setSourceRange(0, 0);
-		
-		SimpleType nodeType = ast.newSimpleType(nodeTypeName);
-		nodeType.setSourceRange(0, 0);
-		
-		SimpleName variableName = ast.newSimpleName("variableName");
-		variableName.setSourceRange(0, 0);
-
-		SingleVariableDeclaration selectedNode = ast.newSingleVariableDeclaration();
-		selectedNode.setSourceRange(0, 0);
-		selectedNode.setType(nodeType);
-		selectedNode.setName(variableName);
-		
-		MethodDeclaration methodDeclaration = ast.newMethodDeclaration();
-		methodDeclaration.parameters().add(selectedNode);
-		methodDeclaration.setSourceRange(0, 0);
-		
-		TypeDeclaration typeDeclaration = ast.newTypeDeclaration();
-		typeDeclaration.setSourceRange(0, 0);
-		typeDeclaration.bodyDeclarations().add(methodDeclaration);
-		
-		CompilationUnit cu = ast.newCompilationUnit();
-		cu.types().add(typeDeclaration);
-		
-		when(mockProblem.getCoveredNode(any())).thenReturn(selectedNode);
-		
-		IJavaCompletionProposal[] corrections = quickFixBase.getCorrections(context, locations);	
-		
-		assertEquals(1, corrections.length);
-		assertEquals(6, corrections[0].getRelevance());
-		
-		ASTRewriteCorrectionProposal proposal = (ASTRewriteCorrectionProposal) corrections[0];
-		
-		assertEquals("Use the new try resource technique", proposal.getName());
+	void nullPointerProcessorTest1() throws ExecutionException, CoreException {
+		testSingleVariable(("package bar;\r\n" + 
+				"import java.util.Optional;\r\n" + 
+				"public class Demo {\r\n" + 
+				"	private static String getHelloMessage(Language language, String parameter2) {\r\n" + 
+				"		if (language == null) {\r\n" + 
+				"			return \"null\";\r\n" + 
+				"		}\r\n" + 
+				"		if (null == language) {\r\n" + 
+				"			return \"null\";\r\n" + 
+				"		}\r\n" + 
+				"		if (\"defaultString\" == null) {\r\n" + 
+				"			return \"null\";\r\n" + 
+				"		}\r\n" + 			
+				"	}\r\n" + 
+				"}\r\n").toCharArray());
 	}
+	
+	@Test
+	void nullPointerProcessorTest2() throws ExecutionException, CoreException {
+		testSingleVariable(("package bar;\r\n" + 
+				"\r\n" + 
+				"import bar.i18n.Language;\r\n" + 
+				"\r\n" + 
+				"public class OptionalDemo2 {\r\n" + 
+				"\r\n" + 
+				"	public static void main(String[] args) {\r\n" + 
+				"		System.out.println(getHelloMessage(Language.ES));\r\n" + 
+				"		System.out.println(getHelloMessage(Language.HU));\r\n" + 
+				"	}\r\n" + 
+				"	\r\n" + 
+				"	private static String getHelloMessage(Language language) {\r\n" + 
+				"		if (language != null) {\r\n" + 
+				"			return \"null\";\r\n" + 
+				"		}\r\n" + 
+				"		\r\n" + 
+				"		boolean checkDualLanguages = false;\r\n" + 
+				"		boolean useDictionary = true;\r\n" + 
+				"		Language testLanguageOne = language;\r\n" + 
+				"		language = testLanguageOne;\r\n" + 
+				"		testLanguageOne = language;\r\n" + 
+				"\r\n" + 
+				"		if (!checkDualLanguages && language == null || useDictionary) {\r\n" + 
+				"			return \"null\";\r\n" + 
+				"		}\r\n" + 
+				"\r\n" + 
+				"		switch (language) {\r\n" + 
+				"		case DE:\r\n" + 
+				"			return \"Hello Welt!\";\r\n" + 
+				"		default:\r\n" + 
+				"			return \"HW\";\r\n" + 
+				"		}\r\n" + 
+				"	}\r\n" + 
+				"}\r\n" + 
+				"").toCharArray());
+	}
+	
+	private void testSingleVariable(char[] source) {
+		CompilationUnit cu = (CompilationUnit) testParse(source);
+		cu.accept(new ASTVisitor() {
+			@Override
+			public boolean visit(SingleVariableDeclaration node) {
+				if (!node.getName().getIdentifier().equals("language")) {
+					return false;
+				}
+				when(mockProblem.getCoveredNode(any())).thenReturn(node);
+				
+				IJavaCompletionProposal[] corrections;
+				try {
+					corrections = new QuickFixNullPointers().getCorrections(context, locations);
+					
+					assertEquals(1, corrections.length);
+					assertEquals(6, corrections[0].getRelevance());
+					
+					ASTRewriteCorrectionProposal proposal = (ASTRewriteCorrectionProposal) corrections[0];
+					
+					assertEquals("Use Optional class instead of nullable parameter", proposal.getName());
+				} catch (CoreException e) {
+					e.printStackTrace();
+				}
+				return false;
+			}
+		});
+	}
+	
 
 	@SuppressWarnings("unchecked")
 	private void immutableTestWithMethod(String expression, String name) throws CoreException {
